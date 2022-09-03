@@ -8,6 +8,23 @@ import (
 	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
+var (
+	_timeout = time.Duration(3)
+	// ReadTimeout default 2 secs
+	ReadTimeout = _timeout * time.Second
+	// WriteTimeout default 2 secs
+	WriteTimeout = _timeout * time.Second
+	_mb          = 1024 * 1024
+	// MaxMessageBytes default 10 Mb
+	MaxMessageBytes = 10 * _mb
+	// MaxRecipients default 50
+	MaxRecipients = 50
+	// AllowInsecureAuth default true
+	AllowInsecureAuth = true
+	// EnableSMTPUTF8 default true
+	EnableSMTPUTF8 = true
+)
+
 // SMTPServer abstration
 type SMTPServer interface {
 	Shutdown() error
@@ -32,23 +49,6 @@ func (srv *SrvBackend) Shutdown() error {
 func (srv *SrvBackend) ListenAndServe() error {
 	return srv.smtp.ListenAndServe()
 }
-
-var (
-	_timeout = time.Duration(10)
-	// ReadTimeout default 2 secs
-	ReadTimeout = _timeout * time.Second
-	// WriteTimeout default 2 secs
-	WriteTimeout = _timeout * time.Second
-	_mb          = 1024 * 1024
-	// MaxMessageBytes default 10 Mb
-	MaxMessageBytes = 10 * _mb
-	// MaxRecipients default 50
-	MaxRecipients = 50
-	// AllowInsecureAuth default true
-	AllowInsecureAuth = true
-	// EnableSMTPUTF8 default true
-	EnableSMTPUTF8 = true
-)
 
 // NewServer prepares SMTP server
 func NewServer(addr, domain string) *SrvBackend {

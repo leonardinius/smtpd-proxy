@@ -52,12 +52,12 @@ windows: $(GOFILES)
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go test -timeout=60s -parallel 4 -v ./... 2>&1; 
+	go test -timeout=30s -parallel 4 -v ./... 2>&1; 
 
 citest: $(GOFILES)
 	if ! hash go2xunit 2>/dev/null; then go get -u github.com/tebeka/go2xunit; fi
 	cd ${BUILDDIR}; \
-	go test -race -timeout=60s -count 1 -parallel 4 -v ./... 2>&1 | go2xunit -output ${BUILDOUT}/${TEST_REPORT} ; 
+	go test -race -timeout=30s -count 1 -parallel 4 -v ./... 2>&1 | go2xunit -output ${BUILDOUT}/${TEST_REPORT} ; 
 
 lint: $(GOFILES)
 	-cd ${BUILDDIR}; \
