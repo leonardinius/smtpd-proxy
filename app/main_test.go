@@ -99,12 +99,12 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)
-	ctx, cancelFn := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
-	poll := time.Tick(10 * time.Millisecond)
+	poll := time.Tick(20 * time.Millisecond)
 	select {
 	case <-poll:
-		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
 		defer limitCancelFn()
 		conn, err = d.DialContext(limitCtx, "tcp", addr)
 		if err == nil {

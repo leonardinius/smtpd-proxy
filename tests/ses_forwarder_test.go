@@ -233,8 +233,8 @@ func requireSesFileWithContains(t *testing.T, needle string) *os.File {
 			}
 			return sesFile != nil
 		},
-		time.Second,
-		10*time.Millisecond,
+		5*time.Second,
+		50*time.Millisecond,
 		"Failed to obtain ses payloads for %s", needle,
 	)
 	require.NotNil(t, sesFile)
