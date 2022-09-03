@@ -50,10 +50,6 @@ smtpd-proxy:
 
 	finished := make(chan struct{})
 	go func() {
-		// file, _ := os.Open(cfg.Name())
-		// defer file.Close()
-		// bytes, _ := io.ReadAll(file)
-		// log.Printf("Config %s\n%s\n", cfg.Name(), string(bytes))
 		os.Args = []string{"test", "-c", cfg.Name()}
 		main()
 		close(finished)
