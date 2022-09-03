@@ -24,9 +24,6 @@ jobs:
       
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
-      
-      - name: build & test
-        run: make build test
   
   buildtest:
     name: test
