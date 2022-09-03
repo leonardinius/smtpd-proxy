@@ -1,4 +1,4 @@
-name: lint-test-commit
+name: build-commit
 
 on:
   push:
