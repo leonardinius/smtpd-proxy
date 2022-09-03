@@ -61,7 +61,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	var err error
 
 	addr := fmt.Sprintf("%s:%d", BindHost, port)
-	ctx, cancelFn := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 
 	poll := time.NewTicker(10 * time.Millisecond)
