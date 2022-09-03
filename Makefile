@@ -24,6 +24,8 @@ LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.
 # Build the project
 all: clean test lint build
 
+release: clean test lint linux windows darwin
+
 gorun: 
 	cd ${BUILDDIR}; \
 	GOOS=${GOOS} GOARCH=${GOARCH} go run ./${APPMODULE} --verbose --configuration=smtpd-proxy.yml; \
