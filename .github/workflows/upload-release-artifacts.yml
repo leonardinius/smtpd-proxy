@@ -26,24 +26,24 @@ jobs:
       - name: Build release
         run: make release
 
-      - name: Upload smtpd-proxy-darwin-arm64 to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: bin/smtpd-proxy-darwin-arm64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload smtpd-proxy-linux-arm64 to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: bin/smtpd-proxy-linux-arm64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload smtpd-proxy-windows-arm64.exe to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: bin/smtpd-proxy-windows-arm64.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload smtpd-proxy-darwin-arm64 to release
+      #   uses: JasonEtco/upload-to-release@master
+      #   with:
+      #     args: bin/smtpd-proxy-darwin-arm64
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload smtpd-proxy-linux-arm64 to release
+      #   uses: JasonEtco/upload-to-release@master
+      #   with:
+      #     args: bin/smtpd-proxy-linux-arm64
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload smtpd-proxy-windows-arm64.exe to release
+      #   uses: JasonEtco/upload-to-release@master
+      #   with:
+      #     args: bin/smtpd-proxy-windows-arm64.exe
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload smtpd-proxy.yml to release
         uses: JasonEtco/upload-to-release@master
         with:
