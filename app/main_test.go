@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -51,10 +50,10 @@ smtpd-proxy:
 
 	finished := make(chan struct{})
 	go func() {
-		file, _ := os.Open(cfg.Name())
-		defer file.Close()
-		bytes, _ := io.ReadAll(file)
-		log.Printf("Config %s\n%s\n", cfg.Name(), string(bytes))
+		// file, _ := os.Open(cfg.Name())
+		// defer file.Close()
+		// bytes, _ := io.ReadAll(file)
+		// log.Printf("Config %s\n%s\n", cfg.Name(), string(bytes))
 		os.Args = []string{"test", "-c", cfg.Name()}
 		main()
 		close(finished)
@@ -109,7 +108,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	poll := time.Tick(20 * time.Millisecond)
 	select {
 	case <-poll:
-		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		defer limitCancelFn()
 		conn, err = d.DialContext(limitCtx, "tcp", addr)
 		if err == nil {
