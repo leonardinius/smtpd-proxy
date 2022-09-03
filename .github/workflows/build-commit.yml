@@ -46,4 +46,4 @@ jobs:
             ${{ runner.os }}-golang-          
       - uses: actions/checkout@v3
       - name: build & test
-        run: find . && make build test
+        run: make build test
