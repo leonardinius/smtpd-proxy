@@ -1,4 +1,4 @@
-name: lint-build-commit
+name: lint-test-commit
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
   #     - name: build & test
   #       run: make build test
   
-  buildtest:
+  test:
     name: test
     runs-on: ubuntu-latest
     steps:
@@ -46,4 +46,4 @@ jobs:
             ${{ runner.os }}-golang-          
       - uses: actions/checkout@v3
       - name: build & test
-        run: make build test
+        run: make test
