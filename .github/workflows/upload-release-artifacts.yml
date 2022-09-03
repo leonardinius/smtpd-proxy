@@ -1,6 +1,8 @@
 name: upload-release-artifacts
 
-on: release
+on:
+  release:
+    types: [published]
 
 jobs:
   build-docker-image:
