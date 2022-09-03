@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-docker-image:
-    name: Build and upload docker image
+    name: Build and upload artifacts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
@@ -28,16 +28,16 @@ jobs:
       - name: Build release
         run: make release
 
-      - name: Upload smtpd-proxy-darwin-arm64 to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: bin/smtpd-proxy-*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload smtpd-proxy.yml to release
         uses: JasonEtco/upload-to-release@master
         with:
-          args: smtpd-proxy.yml
+          args: ./smtpd-proxy.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload smtpd-proxy binaries to release 
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: ./bin/smtpd-proxy-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
