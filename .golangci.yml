@@ -1,0 +1,79 @@
+run:
+  timeout: 5m
+  output:
+    format: tab
+  skip-dirs:
+    - vendor
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0.1
+  maligned:
+    suggest-new: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+  revive:
+    ignore-generated-header: true
+    severity: warning
+    enableAllRules: true
+
+linters:
+  enable:
+    - bodyclose
+    - megacheck
+    - revive
+    - govet
+    - unconvert
+    - megacheck
+    - gas
+    - gocyclo
+    - dupl
+    - misspell
+    - unparam
+    - typecheck
+    - ineffassign
+    - stylecheck
+    - gochecknoinits
+    - exportloopref
+    - gocritic
+    - nakedret
+    - gosimple
+    - prealloc
+    - unused
+  disable:
+    - errcheck
+    - structcheck #abandoned (1.49.0) replaced by unused
+    - varcheck    #abandoned (1.49.0) replaced by unused
+    - deadcode    #abandoned (1.49.0) replaced by unused
+  fast: false
+  disable-all: false
+
+issues:
+  exclude-rules:
+    - text: "at least one file in a package should have a package comment"
+      linters:
+        - stylecheck
+    - text: "should have a package comment"
+      linters:
+        - golint
+        - revive
+    - path: _test\.go
+      linters:
+        - gosec
+        - dupl
+    - text: "use of weak random number generator \\(math/rand instead of crypto/rand\\)"
+      linters:
+        - gosec
+  exclude-use-default: false
