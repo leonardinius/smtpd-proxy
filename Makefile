@@ -48,7 +48,7 @@ darwin: $(GOFILES)
 
 windows: $(GOFILES)
 	cd ${BUILDDIR}; \
-	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}//${BINARY}-windows-${GOARCH}.exe ./${APPMODULE} ; 
+	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-windows-${GOARCH}.exe ./${APPMODULE} ; 
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
