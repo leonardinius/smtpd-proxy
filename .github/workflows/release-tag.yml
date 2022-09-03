@@ -1,0 +1,46 @@
+name: Add GH Release notes
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-docker-image:
+    name: Build and upload artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
+
+      - name: Pull source
+        uses: actions/checkout@v1
+      
+      - name: Build release
+        run: |
+          GOARCH=arm64 make bin;
+          GOARCH=amd64 make bin;
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          body_path: CHANGELOG.md
+          files: |
+            smtpd-proxy.yml
+            bin/smtpd-proxy-*
+
+      - name: Done
+        run: echo Done
+      

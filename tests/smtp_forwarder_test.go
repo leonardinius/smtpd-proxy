@@ -234,8 +234,8 @@ func requireFakerReceivedEmailWithContains(t *testing.T, fakerAPIBaseURL, needle
 			}
 			return forwardedEmail != nil
 		},
-		time.Second,
-		10*time.Millisecond,
+		5*time.Second,
+		50*time.Millisecond,
 		"Failed to obtain ses payloads for %s", needle,
 	)
 	require.NotNil(t, forwardedEmail)

@@ -17,7 +17,12 @@ This is my first non-trivial Golang project and no doubt I have been wrongful, n
 
 ## Installation
 
-TBD
+Grab latest release from https://github.com/leonardinius/smtpd-proxy/releases or build from source.
+
+To build from source, make sure you have GNU make available.
+```shell
+$ make all 
+```
 
 ## Run & Configure
 
@@ -34,7 +39,7 @@ Application Options:
 Help Options:
   -h, --help           Show this help message
 
-smtpd-proxy v0.0.0-dirty-gitsha1
+smtpd-proxy revision dirty-gitsha1
 ```
 
 COnfiguration
@@ -94,7 +99,7 @@ tl;dr
 Example:
 ```shell
 ./bin/smtpd-proxy
-smtpd-proxy v0.0.0-dirty-gitsha1
+smtpd-proxy revision dirty-gitsha1
 2022-09-03T06:13:59.139+0300 info Parsing yaml at path: smtpd-proxy copy.yml
 2022-09-03T06:13:59.141+0300 info Starting server at 127.0.0.1:1025 [EHLO localhost]
 2022-09-03T06:14:38.272+0300 info log-forwarder {"uid": "uid:53ee46bd42803f97", "From": "from@example.com <from@example.com>", "To": ["Mailtrap Inbox to-30080-1128@example.com <to-30080-1128@exa

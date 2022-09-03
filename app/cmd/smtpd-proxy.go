@@ -21,8 +21,6 @@ import (
 )
 
 var (
-	// VERSION app veriosn to be reported when run
-	VERSION = "0.0.0"
 	// COMMIT git commit
 	COMMIT = "gitsha1"
 	// BRANCH git branch
@@ -44,7 +42,7 @@ func Main() {
 
 	if _, err := p.Parse(); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-			fmt.Printf("smtpd-proxy v%s-%s-%s\n", VERSION, BRANCH, COMMIT)
+			fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 			os.Exit(0)
 		} else {
 			os.Exit(1)
@@ -54,7 +52,7 @@ func Main() {
 	zlog.NewZapLogger(opts.Verbose)
 	defer zlog.Sync()
 
-	fmt.Printf("smtpd-proxy v%s-%s-%s\n", VERSION, BRANCH, COMMIT)
+	fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 	opts.ConfigYamlFile = filepath.Clean(opts.ConfigYamlFile)
 	zlog.Infof("Parsing yaml at path: %s", opts.ConfigYamlFile)
 	cfg, err := config.ParseFile(opts.ConfigYamlFile)
