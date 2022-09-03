@@ -64,11 +64,11 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 
-	poll := time.NewTicker(10 * time.Millisecond)
+	poll := time.NewTicker(20 * time.Millisecond)
 	defer poll.Stop()
 	select {
 	case <-poll.C:
-		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer limitCancelFn()
 		conn, err = d.DialContext(limitCtx, "tcp", addr)
 		if err == nil {
