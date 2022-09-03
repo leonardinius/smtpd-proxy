@@ -104,7 +104,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)
-	ctx, cancelFn := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 	poll := time.Tick(10 * time.Millisecond)
 	select {
