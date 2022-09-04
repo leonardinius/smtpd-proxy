@@ -17,7 +17,16 @@ This is my first non-trivial Golang project and no doubt I have been wrongful, n
 
 ## Installation
 
-Grab latest release from https://github.com/leonardinius/smtpd-proxy/releases or build from source.
+Grab latest release from https://github.com/leonardinius/smtpd-proxy/releases/latest or build from source.
+
+**Assets**
+- [smtpd-proxy-darwin-amd64](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy-darwin-amd64)
+- [smtpd-proxy-darwin-arm64](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy-darwin-arm64)
+- [smtpd-proxy-linux-amd64](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy-linux-amd64)
+- [smtpd-proxy-linux-arm64](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy-linux-arm64)
+- [smtpd-proxy-windows-amd64.exe](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy-windows-amd64.exe)
+- [smtpd-proxy-windows-arm64.exe](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy-windows-arm64.exe)
+- [smtpd-proxy.yml](https://github.com/leonardinius/smtpd-proxy/releases/latest/download/smtpd-proxy.yml)
 
 To build from source, make sure you have GNU make available.
 ```shell
