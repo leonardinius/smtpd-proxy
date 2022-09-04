@@ -24,7 +24,7 @@ LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.
 # Build the project
 all: clean test lint build
 
-release: clean test lint linux windows darwin
+release: clean citest lint linux windows darwin
 
 gorun: 
 	cd ${BUILDDIR}; \
@@ -35,19 +35,19 @@ run: build
     ${BUILDOUT}/${BINARY}-${GOOS}-${GOARCH} --configuration=smtpd-proxy.yml; 
 
 build: $(GOFILES)
-	cd ${BUILDDIR}; \
+	cd ${BUILDDIR}; mkdir -p ${BUILDOUT};\
 	GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-${GOOS}-${GOARCH} ./${APPMODULE}; 
 
 linux: $(GOFILES)
-	cd ${BUILDDIR}; \
+	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
 	GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-linux-${GOARCH} ./${APPMODULE}; 
 
 darwin: $(GOFILES)
-	cd ${BUILDDIR}; \
+	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
 	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-darwin-${GOARCH} ./${APPMODULE} ; 
 
 windows: $(GOFILES)
-	cd ${BUILDDIR}; \
+	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
 	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-windows-${GOARCH}.exe ./${APPMODULE} ; 
 
 test: $(GOFILES)
@@ -56,11 +56,11 @@ test: $(GOFILES)
 
 citest: $(GOFILES)
 	if ! hash go2xunit 2>/dev/null; then go get -u github.com/tebeka/go2xunit; fi
-	cd ${BUILDDIR}; \
+	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
 	go test -race -timeout=120s -count 1 -parallel 4 -v ./... 2>&1 | go2xunit -output ${BUILDOUT}/${TEST_REPORT} ; 
 
 lint: $(GOFILES)
-	-cd ${BUILDDIR}; \
+	-cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
     if ! hash golangci-lint 2>/dev/null; then \
 	  curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH} v1.48.0; \
       go get -u github.com/mattn/goveralls; \

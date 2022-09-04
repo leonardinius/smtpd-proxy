@@ -1,8 +1,9 @@
-name: upload-release-artifacts
+name: release-tag
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   build-docker-image:
@@ -28,18 +29,17 @@ jobs:
       - name: Build release
         run: make release
 
-      - name: Upload smtpd-proxy.yml to release
-        uses: JasonEtco/upload-to-release@master
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          args: ./smtpd-proxy.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload smtpd-proxy binaries to release 
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: ./bin/smtpd-proxy-*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            smtpd-proxy.yml
+            bin/smtpd-proxy-darwin-arm64
+            bin/smtpd-proxy-windows-arm64.exe
+            bin/smtpd-proxy-linux-arm64
+            # bin/report-tests.xml
+            # bin/report-lint.xml
 
       - name: Done
         run: echo Done
