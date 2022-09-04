@@ -28,8 +28,8 @@ jobs:
       
       - name: Build release
         run: |
-          GOARCH=arm64 make bin;
-          GOARCH=amd64 make bin;
+          BRANCH=$GITHUB_REF_NAME GOARCH=arm64 make bin;
+          BRANCH=$GITHUB_REF_NAME GOARCH=amd64 make bin;
 
       - name: Release
         uses: softprops/action-gh-release@v1
