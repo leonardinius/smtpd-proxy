@@ -51,7 +51,7 @@ Help Options:
 smtpd-proxy revision dirty-gitsha1
 ```
 
-COnfiguration
+Configuration
 
 ```yaml
 smtpd-proxy:
