@@ -25,7 +25,7 @@ jobs:
 
       - name: Pull source
         uses: actions/checkout@v1
-      
+
       - name: Build release
         run: |
           make clean lint test;
@@ -44,4 +44,3 @@ jobs:
 
       - name: Done
         run: echo Done
-      
