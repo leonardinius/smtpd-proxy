@@ -28,7 +28,7 @@ smtpd-proxy:
   is_anon_auth_allowed: true
   upstream-servers:
     - type: log
-      weight: 70	  
+      weight: 70
 `, bindHost, port)
 
 	var (

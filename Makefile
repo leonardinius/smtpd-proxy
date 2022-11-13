@@ -1,4 +1,4 @@
-# Borrowed from: 
+# Borrowed from:
 # https://gist.github.com/turtlemonvh/38bd3d73e61769767c35931d8c70ccb4
 BINARY		= smtpd-proxy
 APPMODULE	= app
@@ -24,34 +24,34 @@ LDFLAGS = -ldflags "-X github.com/leonardinius/smtpd-proxy/app/cmd.COMMIT=${COMM
 all: clean test lint build
 
 bin: linux windows darwin
-	
-gorun: 
+
+gorun:
 	cd ${BUILDDIR}; \
-	GOOS=${GOOS} GOARCH=${GOARCH} go run ./${APPMODULE} --verbose --configuration=smtpd-proxy.yml; 
+	GOOS=${GOOS} GOARCH=${GOARCH} go run ./${APPMODULE} --verbose --configuration=smtpd-proxy.yml;
 
 run: build
 	cd ${BUILDDIR}; \
-    ${BUILDOUT}/${BINARY}-${GOOS}-${GOARCH} --configuration=smtpd-proxy.yml; 
+    ${BUILDOUT}/${BINARY}-${GOOS}-${GOARCH} --configuration=smtpd-proxy.yml;
 
 build: $(GOFILES)
 	cd ${BUILDDIR}; mkdir -p ${BUILDOUT};\
-	GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-${GOOS}-${GOARCH} ./${APPMODULE}; 
+	GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-${GOOS}-${GOARCH} ./${APPMODULE};
 
 linux: $(GOFILES)
 	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
-	GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-linux-${GOARCH} ./${APPMODULE}; 
+	GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-linux-${GOARCH} ./${APPMODULE};
 
 darwin: $(GOFILES)
 	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
-	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-darwin-${GOARCH} ./${APPMODULE} ; 
+	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-darwin-${GOARCH} ./${APPMODULE} ;
 
 windows: $(GOFILES)
 	cd ${BUILDDIR}; mkdir -p ${BUILDOUT}; \
-	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-windows-${GOARCH}.exe ./${APPMODULE} ; 
+	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILDOUT}/${BINARY}-windows-${GOARCH}.exe ./${APPMODULE} ;
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go test -race -timeout=120s -count 1 -parallel 4 -v ./... 2>&1; 
+	go test -race -timeout=120s -count 1 -parallel 4 -v ./... 2>&1;
 
 lint: $(GOFILES)
 	-cd ${BUILDDIR}; \
@@ -60,11 +60,11 @@ lint: $(GOFILES)
 	  curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH} v1.48.0; \
       go get -u github.com/mattn/goveralls; \
 	fi; \
-	golangci-lint run --config .golangci.yml --out-format=junit-xml ./... > ${BUILDOUT}/${LINT_REPORT} 2>&1; 
+	golangci-lint run --config .golangci.yml --out-format=junit-xml ./... > ${BUILDOUT}/${LINT_REPORT} 2>&1;
 
 fmt: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go fmt $$(go list ./... | grep -v /vendor/) ; 
+	go fmt $$(go list ./... | grep -v /vendor/) ;
 
 clean: $(GOFILES)
 	-rm -f ${BUILDOUT}/${TEST_REPORT}

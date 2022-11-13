@@ -1,9 +1,9 @@
 smtpd-proxy:
   # interface address smtpd-proxy will listen-to
-  # use *:1025 to bind on localhost, 
+  # use *:1025 to bind on localhost,
   # or 0.0.0.0:1025 to  listen on all interfaces
-  listen: 127.0.0.1:1025 
-  
+  listen: 127.0.0.1:1025
+
   # host identification
   ehlo: localhost
 
@@ -19,15 +19,15 @@ smtpd-proxy:
   upstream-servers:
     - type: log
       weight: 10
-    
+
     - type: smtp
       weight: 10
       settings:
-        # host:port to conect to 
+        # host:port to conect to
         addr: smtp.mailtrap.io:2525
         # host identification, optional, needed for auth
         host: smtp.mailtrap.io
-        
+
         # Auth methods available: login, plain, cram-md5, anon
         auth: plain
         username: 8333f344d8884e
@@ -40,6 +40,6 @@ smtpd-proxy:
         aws_access_key_id: amz-key-1
         # AWS credentials, access secret key
         aws_secret_access_key: amz-**-secret
-        # AWS API endpoint, e.g. localstack 
+        # AWS API endpoint, e.g. localstack
         # endpoint: http://localhost:4566
         # region: us-east-1

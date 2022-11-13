@@ -6,13 +6,13 @@ SMTPd-Proxy is a proxy (relay), to load balance multiple SMTP upstream servers.
 
 ![what it is](docs/what-it-is.png)
 
-**Motivation** 
+**Motivation**
 - E-mails and e-spam is sensitive topic. In my day-job we get our email accounts constantly suspended for days, and communicate with support to unblock.
-- The other tool we rely to supports 1 SMTP server at a time. 
+- The other tool we rely to supports 1 SMTP server at a time.
 - To tinker with Golang with something reasonably simple and non-trivial.
 
 This is my first non-trivial Golang project and no doubt I have been wrongful, non idiomatic and plain stupid somewhere in the codebase. That said,
-- you are free to not use this tool, 
+- you are free to not use this tool,
 - you are kindly welcome to submit Contributions and provide helpful feedback to improve the code base or tool.
 
 ## Installation
@@ -30,12 +30,12 @@ Grab latest release from https://github.com/leonardinius/smtpd-proxy/releases/la
 
 To build from source, make sure you have GNU make available.
 ```shell
-$ make all 
+$ make all
 ```
 
 ## Run & Configure
 
-How-to run 
+How-to run
 ```
 ./bin/smtpd-proxy --help
 Usage:
@@ -56,10 +56,10 @@ Configuration
 ```yaml
 smtpd-proxy:
   # interface address smtpd-proxy will listen-to
-  # use *:1025 to bind on localhost, 
+  # use *:1025 to bind on localhost,
   # or 0.0.0.0:1025 to  listen on all interfaces
-  listen: 127.0.0.1:1025 
-  
+  listen: 127.0.0.1:1025
+
   # host identification
   ehlo: localhost
 
@@ -75,15 +75,15 @@ smtpd-proxy:
   upstream-servers:
     - type: log
       weight: 10
-    
+
     - type: smtp
       weight: 10
       settings:
-        # host:port to conect to 
+        # host:port to conect to
         addr: smtp.mailtrap.io:2525
         # host identification, optional, needed for auth
         host: smtp.mailtrap.io
-        
+
         # Auth methods available: login, plain, cram-md5, anon
         auth: plain
         username: 8333f344d8884e
@@ -96,12 +96,12 @@ smtpd-proxy:
         aws_access_key_id: amz-key-1
         # AWS credentials, access secret key
         aws_secret_access_key: amz-**-secret
-        # AWS API endpoint, e.g. localstack 
+        # AWS API endpoint, e.g. localstack
         # endpoint: http://localhost:4566
         # region: us-east-1
 ```
 
-tl;dr 
+tl;dr
 - smtpd-proxy provides SMTP, plain + login auth, TLS (not tested)
 - Upstreams: AWS SES, SMTP forward (plain, login, cram-md5), `log` for troubleshooting.
 
@@ -125,7 +125,7 @@ _Please read this section carefully; you should understand what to expect._
 
 - $ git checkout -b {change-subject}
 - $ make lint test
-- $ git add -A 
+- $ git add -A
 - $ git commit -m 'Change subject description'
 - $ git push -u origin HEAD
 - [Submit Pull Request](https://help.github.com/articles/about-pull-requests/)

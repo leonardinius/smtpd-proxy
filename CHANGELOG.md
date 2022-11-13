@@ -1,7 +1,7 @@
 ## [0.0.1] - 2022-09-04
 Initial release
 
-<!-- 
+<!--
 Examples:
 ## [3.4.0] - 2020-07-10
 ### Added
@@ -24,5 +24,5 @@ Examples:
 - Action execution through Git: from Docker to NodeJS
 
 [3.4.0]: https://github.com/anton-yurchenko/git-release/compare/v3.3.0...v3.4.0
-[3.3.0]: https://github.com/anton-yurchenko/git-release/releases/tag/v3.3.0 
+[3.3.0]: https://github.com/anton-yurchenko/git-release/releases/tag/v3.3.0
 -->
