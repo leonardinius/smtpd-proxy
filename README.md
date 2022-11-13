@@ -7,8 +7,8 @@ SMTPd-Proxy is a proxy (relay), to load balance multiple SMTP upstream servers.
 ![what it is](docs/what-it-is.png)
 
 **Motivation** 
-- E-mails and e-spam is sensitive topic. In my day-job we got our email accounts constantly suspended only to several days to communicate with support to unblock.
-- The other tool we relied to only supported 1 SMTP server at a time. 
+- E-mails and e-spam is sensitive topic. In my day-job we get our email accounts constantly suspended for days, and communicate with support to unblock.
+- The other tool we rely to supports 1 SMTP server at a time. 
 - To tinker with Golang with something reasonably simple and non-trivial.
 
 This is my first non-trivial Golang project and no doubt I have been wrongful, non idiomatic and plain stupid somewhere in the codebase. That said,
@@ -51,7 +51,7 @@ Help Options:
 smtpd-proxy revision dirty-gitsha1
 ```
 
-COnfiguration
+Configuration
 
 ```yaml
 smtpd-proxy:
