@@ -3,9 +3,9 @@ module github.com/leonardinius/smtpd-proxy
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.17.1
+	github.com/aws/aws-sdk-go-v2 v1.17.2
 	github.com/aws/aws-sdk-go-v2/config v1.18.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.3
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/ses v1.14.21
 	github.com/creasty/defaults v1.6.0
 	github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
@@ -23,15 +23,15 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Microsoft/hcsshim v0.9.5 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.25 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.19 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.20 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.26 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.20 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.26 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.11.25 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.17.5 // indirect
-	github.com/aws/smithy-go v1.13.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.20 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.26 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.17.6 // indirect
+	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.9 // indirect
