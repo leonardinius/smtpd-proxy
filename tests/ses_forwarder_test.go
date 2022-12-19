@@ -140,7 +140,8 @@ smtpd-proxy:
 		_, err := envelope.AttachFile("_testData/text-attachment.txt")
 		require.NoError(t, err, "failed to attach file")
 		err = envelope.Send(proxyEndpoint, auth)
-		require.ErrorContains(t, err, "400 Bad Request")
+		require.ErrorContains(t, err, "MessageRejected")
+		require.ErrorContains(t, err, "Did not have authority to send from email gotest-attachment@esmtp.email")
 
 		ses := newSesClient(t, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String(envelope.From)})
