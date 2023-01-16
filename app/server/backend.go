@@ -76,8 +76,8 @@ func (s *session) Rcpt(to string) error {
 
 // Set currently processed message contents and send it.
 func (s *session) Data(r io.Reader) (err error) {
-	if err := s.isAuthOk(); err != nil {
-		return err
+	if err = s.isAuthOk(); err != nil {
+		return
 	}
 
 	var envelope *upstream.Email
