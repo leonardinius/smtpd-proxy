@@ -13,7 +13,7 @@ import (
 // ErrorAuthCredentials error for invalid authentication
 var ErrorAuthCredentials = errors.New("invalid username or password")
 
-// ErrorAuthCredentials error for invalid authentication
+// ErrorAuthAnonCredentials error for unauthorized access
 var ErrorAuthAnonCredentials = errors.New("user has not authenticated. anonymous access is not allowed")
 
 // The backend implements SMTP server methods.
@@ -76,7 +76,7 @@ func (s *session) Rcpt(to string) error {
 
 // Set currently processed message contents and send it.
 func (s *session) Data(r io.Reader) (err error) {
-	if err = s.isAuthOk(); err != nil {
+	if err := s.isAuthOk(); err != nil {
 		return err
 	}
 
