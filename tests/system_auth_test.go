@@ -52,7 +52,7 @@ smtpd-proxy:
 			{"login-wrong-user", forwarder.NewLoginAuth("wrong@example.com", "password", BindHost), "invalid username or password"},
 			{"login-wrong-password", forwarder.NewLoginAuth("user@example.com", "wrong-password", BindHost), "invalid username or password"},
 			//
-			{"anon-fail", nil, "invalid username or password"},
+			{"anon-fail", nil, "anonymous access is not allowed"},
 		}
 
 		for _, test := range credentials {

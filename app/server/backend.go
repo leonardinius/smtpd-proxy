@@ -13,12 +13,93 @@ import (
 // ErrorAuthCredentials error for invalid authentication
 var ErrorAuthCredentials = errors.New("invalid username or password")
 
+// ErrorAuthCredentials error for invalid authentication
+var ErrorAuthAnonCredentials = errors.New("user has not authenticated. anonymous access is not allowed")
+
 // The backend implements SMTP server methods.
 type backend struct {
 	authLoginFunc AuthFunc
 	isAnonAllowed bool
 	forwarder     upstream.Registry
 	ctx           context.Context
+}
+
+// The session implements SMTP session methods.
+type session struct {
+	bkd        *backend
+	c          *smtp.Conn
+	authorized bool
+}
+
+// NewBackend Creates new backend
+func newBackend(authLoginFunc AuthFunc) *backend {
+	return &backend{authLoginFunc: authLoginFunc, ctx: context.Background()}
+}
+
+var _ smtp.Backend = (*backend)(nil)
+
+func (bkd *backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
+	return &session{bkd: bkd, c: c}, nil
+}
+
+var _ smtp.Session = (*session)(nil)
+
+// Check if user is authorized or anon login is allowed
+func (s *session) isAuthOk() error {
+	if s.bkd.isAnonAllowed || s.authorized {
+		return nil
+	}
+
+	return ErrorAuthAnonCredentials
+}
+
+func (s *session) AuthPlain(username, password string) error {
+	err := s.bkd.authLoginFunc.Authenticate(username, password)
+	s.authorized = err == nil
+	zlog.Debugf("AuthPlain: %s %s", username, s.authorized)
+	return err
+}
+
+// Set return path for currently processed message.
+func (s *session) Mail(from string, opts *smtp.MailOptions) error {
+	err := s.isAuthOk()
+	zlog.Debugf("Mail from: %s %v", from, err)
+	return err
+}
+
+// Add recipient for currently processed message.
+func (s *session) Rcpt(to string) error {
+	err := s.isAuthOk()
+	zlog.Debugf("Rcpt to: %s %v", to, err)
+	return err
+}
+
+// Set currently processed message contents and send it.
+func (s *session) Data(r io.Reader) (err error) {
+	if err = s.isAuthOk(); err != nil {
+		return err
+	}
+
+	var envelope *upstream.Email
+	zlog.Debug("DATA")
+	if envelope, err = upstream.NewEmailFromReader(r); err != nil {
+		zlog.Error("Data err", err)
+		return err
+	}
+
+	return s.bkd.forwarder.Forward(s.bkd.ctx, envelope)
+}
+
+// Discard currently processed message.
+func (s *session) Reset() {
+	zlog.Debug("Reset")
+}
+
+// Free all resources associated with session.
+func (s *session) Logout() error {
+	zlog.Debug("Logout")
+	s.authorized = false
+	return nil
 }
 
 // AuthFunc authentitate function type
@@ -49,61 +130,4 @@ func NewHardcodedAuthFunc(username, password string) AuthFunc {
 		}
 		return nil
 	})
-}
-
-// NewBackend Creates new backend
-func newBackend(authLoginFunc AuthFunc) *backend {
-	return &backend{authLoginFunc: authLoginFunc, ctx: context.Background()}
-}
-
-var _ smtp.Backend = (*backend)(nil)
-
-// Login handles a login command with username and password.
-func (bkd *backend) Login(bkdtate *smtp.ConnectionState, username, password string) (smtp.Session, error) {
-	if err := bkd.authLoginFunc.Authenticate(username, password); err != nil {
-		return nil, err
-	}
-
-	return bkd, nil
-}
-
-// AnonymousLogin requires clients to authenticate using SMTP AUTH before sending emails
-func (bkd *backend) AnonymousLogin(bkdtate *smtp.ConnectionState) (smtp.Session, error) {
-	if bkd.isAnonAllowed {
-		return bkd, nil
-	}
-
-	return nil, ErrorAuthCredentials
-}
-
-var _ smtp.Session = (*backend)(nil)
-
-func (bkd *backend) Mail(from string, opts smtp.MailOptions) error {
-	zlog.Debugf("Mail from: %s", from)
-	return nil
-}
-
-func (bkd *backend) Rcpt(to string) error {
-	zlog.Debugf("Rcpt to: %s", to)
-	return nil
-}
-
-func (bkd *backend) Data(r io.Reader) (err error) {
-	var envelope *upstream.Email
-	zlog.Debug("DATA")
-	if envelope, err = upstream.NewEmailFromReader(r); err != nil {
-		zlog.Error("Data err", err)
-		return err
-	}
-
-	return bkd.forwarder.Forward(bkd.ctx, envelope)
-}
-
-func (bkd *backend) Reset() {
-	zlog.Debug("Reset")
-}
-
-func (bkd *backend) Logout() error {
-	zlog.Debug("Logout")
-	return nil
 }
