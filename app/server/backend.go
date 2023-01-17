@@ -27,7 +27,6 @@ type backend struct {
 // The session implements SMTP session methods.
 type session struct {
 	bkd        *backend
-	c          *smtp.Conn
 	authorized bool
 }
 
@@ -39,7 +38,7 @@ func newBackend(authLoginFunc AuthFunc) *backend {
 var _ smtp.Backend = (*backend)(nil)
 
 func (bkd *backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
-	return &session{bkd: bkd, c: c}, nil
+	return &session{bkd: bkd}, nil
 }
 
 var _ smtp.Session = (*session)(nil)
