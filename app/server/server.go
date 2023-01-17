@@ -65,13 +65,7 @@ func NewServer(addr, domain string) *SrvBackend {
 
 	s.EnableAuth(sasl.Login, func(conn *smtp.Conn) sasl.Server {
 		return sasl.NewLoginServer(func(username, password string) error {
-			state := conn.State()
-			session, err := bkd.Login(&state, username, password)
-			if err != nil {
-				return err
-			}
-			conn.SetSession(session)
-			return nil
+			return conn.Session().AuthPlain(username, password)
 		})
 	})
 

@@ -3,6 +3,8 @@ package server
 import (
 	"crypto/tls"
 
+	"github.com/emersion/go-sasl"
+	"github.com/emersion/go-smtp"
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 )
 
@@ -29,6 +31,13 @@ func WithAuth(auth AuthFunc) Option {
 func WithAnnonAuthAllowed(isAnonAllowed bool) Option {
 	return optionFunc(func(srv *SrvBackend) {
 		srv.backend.isAnonAllowed = isAnonAllowed
+		if !isAnonAllowed {
+			srv.smtp.EnableAuth(sasl.Anonymous, func(conn *smtp.Conn) sasl.Server {
+				return sasl.NewAnonymousServer(func(trace string) error {
+					return conn.Session().AuthPlain("", "")
+				})
+			})
+		}
 	})
 }
 
