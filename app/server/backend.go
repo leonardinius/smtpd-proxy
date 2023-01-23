@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
 
 	"github.com/emersion/go-smtp"
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
@@ -55,7 +56,7 @@ func (s *session) isAuthOk() error {
 func (s *session) AuthPlain(username, password string) error {
 	err := s.bkd.authLoginFunc.Authenticate(username, password)
 	s.authorized = err == nil
-	zlog.Debugf("AuthPlain: %s %s", username, s.authorized)
+	zlog.Debugf("AuthPlain: %s %s", username, strconv.FormatBool(s.authorized))
 	return err
 }
 
