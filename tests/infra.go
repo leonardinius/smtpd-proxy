@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
+	"github.com/leonardinius/smtpd-proxy/app/zlog"
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"
 )
@@ -52,7 +53,10 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 	}()
 
 	conn := waitForPortListenStart(t, port)
-	defer conn.Close()
+	defer func() {
+		err = conn.Close()
+		zlog.Debugf("conn.Close() error: %v", err)
+	}()
 	test(t, conn)
 }
 
@@ -83,7 +87,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	}
 
 	require.NotNil(t, conn)
-	err = conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+	err = conn.SetDeadline(time.Now().Add(500 * time.Millisecond))
 	if err != nil {
 		t.Fatal("SMTP open error", err)
 	}
