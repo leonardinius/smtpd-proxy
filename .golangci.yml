@@ -55,8 +55,8 @@ linters:
   disable:
     - errcheck
     - structcheck #abandoned (1.49.0) replaced by unused
-    - varcheck    #abandoned (1.49.0) replaced by unused
-    - deadcode    #abandoned (1.49.0) replaced by unused
+    - varcheck #abandoned (1.49.0) replaced by unused
+    - deadcode #abandoned (1.49.0) replaced by unused
   fast: false
   disable-all: false
 
@@ -74,6 +74,10 @@ issues:
         - gosec
         - dupl
     - text: "use of weak random number generator \\(math/rand instead of crypto/rand\\)"
+      linters:
+        - gosec
+    - text: 'Deferring unsafe method "Close"'
+      path: tests/infra\.go
       linters:
         - gosec
   exclude-use-default: false
