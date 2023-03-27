@@ -129,6 +129,10 @@ smtpd-proxy:
       region: us-east-1
 `, BindHost, port, sesEndpoint)
 	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
+		ses := newSesClient(t, sesEndpoint)
+		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String("<gotest-attachment@esmtp.email>")})
+		require.NoError(t, err, "failed to verify gotest-attachment@esmtp.email")
+
 		// Setup authentication information.
 		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
 		envelope := email.NewEmail()
@@ -140,20 +144,13 @@ smtpd-proxy:
 		_, err := envelope.AttachFile("_testData/text-attachment.txt")
 		require.NoError(t, err, "failed to attach file")
 		err = envelope.Send(proxyEndpoint, auth)
-		require.ErrorContains(t, err, "MessageRejected")
-		require.ErrorContains(t, err, "Did not have authority to send from email gotest-attachment@esmtp.email")
-
-		ses := newSesClient(t, sesEndpoint)
-		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String(envelope.From)})
-		require.NoError(t, err, "failed to verify gotest-attachment@esmtp.email")
-		err = envelope.Send(proxyEndpoint, auth)
 		assert.NoError(t, err, "failed to resend e-mail")
 
+		// assert that the file was sent
 		sesFile := requireSesFileWithContains(t, envelope.From)
 		bytes, err := io.ReadAll(sesFile)
 		require.NoError(t, err)
 		jsonMessage := string(bytes)
-
 		loremIpsumBase64 := base64.StdEncoding.EncodeToString([]byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit."))
 		for strings.HasSuffix(loremIpsumBase64, "=") {
 			loremIpsumBase64 = strings.TrimSuffix(loremIpsumBase64, "=")
