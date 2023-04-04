@@ -45,5 +45,5 @@ jobs:
         with:
           name: test-report.log
           path: |
-            **/bin/test-report.log
+            ${{ github.workspace }}/bin/test-report.log
           if-no-files-found: error
