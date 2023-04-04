@@ -38,13 +38,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build & test
-        run: make ci-test
+        run: |
+          make ci-test
+          cp ${{ github.workspace }}/bin/test-report.log /tmp/test-report.log
       - name: Upload test log
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: test-report.log
-          path: |
-            ${{ github.workspace }}
+          path: /tmp/test-report.log
           if-no-files-found: error
-          # /bin/test-report.log
