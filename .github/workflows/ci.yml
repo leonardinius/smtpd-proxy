@@ -35,7 +35,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-golang-
       - uses: actions/checkout@v3
-      - name: build & test
+      - name: Build & test
         run: make ci-test
       - name: Upload test log
         uses: actions/upload-artifact@v2
