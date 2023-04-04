@@ -36,4 +36,11 @@ jobs:
             ${{ runner.os }}-golang-
       - uses: actions/checkout@v3
       - name: build & test
-        run: make test
+        run: make ci-test
+      - name: Upload test log
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: test-log
+          path: bin/test-report.log
+          if-no-files-found: error

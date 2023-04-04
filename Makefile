@@ -2,7 +2,7 @@
 # https://gist.github.com/turtlemonvh/38bd3d73e61769767c35931d8c70ccb4
 BINARY		= smtpd-proxy
 APPMODULE	= app
-TEST_REPORT	= report-tests.xml
+TEST_REPORT	= test-report.log
 LINT_REPORT	= report-lint.xml
 BUILDDIR	= $(shell pwd)
 BUILDOUT	= $(shell pwd)/bin
@@ -51,7 +51,12 @@ windows: $(GOFILES)
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go test -race -timeout=120s -count 1 -parallel 4 -v ./... 2>&1;
+	go test -race -timeout=120s -count 1 -parallel 4 -v ./... 2>&1
+
+ci-test: $(GOFILES)
+	cd ${BUILDDIR}; \
+	go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest; \
+	go test -race -timeout=120s -count 1 -parallel 4 -v ./... -json 2>&1 | tee ${BUILDOUT}/${TEST_REPORT} | gotestfmt
 
 lint: $(GOFILES)
 	-cd ${BUILDDIR}; \
@@ -67,9 +72,8 @@ fmt: $(GOFILES)
 	go fmt $$(go list ./... | grep -v /vendor/) ;
 
 clean: $(GOFILES)
-	-rm -f ${BUILDOUT}/${TEST_REPORT}
-	-rm -f ${BUILDOUT}/${TEST_REPORT}.tmp
 	-rm -f ${BUILDOUT}/${LINT_REPORT}
+	-rm -f ${BUILDOUT}/${TEST_REPORT}
 	-rm -f ${BUILDOUT}/${BINARY}-*
 
 .PHONY: gorun clean test
