@@ -38,9 +38,10 @@ jobs:
       - name: Build & test
         run: make ci-test
       - name: Upload test log
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: test-log
-          path: bin/test-report.log
+          name: test-report.log
+          path: |
+            **/bin/test-report.log
           if-no-files-found: error
