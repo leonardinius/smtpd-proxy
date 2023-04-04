@@ -62,11 +62,10 @@ ci-test: $(GOFILES)
 lint: $(GOFILES)
 	-cd ${BUILDDIR}; \
 	mkdir -p ${BUILDOUT}; \
-    if ! hash golangci-lint 2>/dev/null; then \
-	  curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH} v1.48.0; \
-      go get -u github.com/mattn/goveralls; \
+    if ! hash ${GOPATH}/golangci-lint 2>/dev/null; then \
+	  curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH} ; \
 	fi; \
-	golangci-lint run --config .golangci.yml --out-format=junit-xml ./... > ${BUILDOUT}/${LINT_REPORT} 2>&1;
+	${GOPATH}/golangci-lint run --config .golangci.yml --out-format=junit-xml ./... 2>&1 | tee ${BUILDOUT}/${LINT_REPORT};
 
 fmt: $(GOFILES)
 	cd ${BUILDDIR}; \
