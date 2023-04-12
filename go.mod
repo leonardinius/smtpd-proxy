@@ -3,10 +3,10 @@ module github.com/leonardinius/smtpd-proxy
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.17.7
-	github.com/aws/aws-sdk-go-v2/config v1.18.19
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.18
-	github.com/aws/aws-sdk-go-v2/service/ses v1.15.5
+	github.com/aws/aws-sdk-go-v2 v1.17.8
+	github.com/aws/aws-sdk-go-v2/config v1.18.21
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.20
+	github.com/aws/aws-sdk-go-v2/service/ses v1.15.7
 	github.com/creasty/defaults v1.7.0
 	github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
 	github.com/emersion/go-smtp v0.16.0
@@ -22,14 +22,14 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.31 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.25 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.32 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.25 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.12.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.18.7 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.33 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.26 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.12.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.18.9 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/containerd/containerd v1.7.0 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.16.3 // indirect
+	github.com/klauspost/compress v1.16.4 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/moby/patternmatcher v0.5.0 // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
-	github.com/opencontainers/runc v1.1.5 // indirect
+	github.com/opencontainers/runc v1.1.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
@@ -61,9 +61,9 @@ require (
 	go.uber.org/goleak v1.2.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/tools v0.7.0 // indirect
+	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
