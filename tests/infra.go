@@ -35,7 +35,7 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 	done := make(chan struct{})
 	go func() {
 		<-done
-		serverCh <- cmd.STOP_SIGNAL
+		serverCh <- cmd.ServerStopSignal
 	}()
 
 	finished := make(chan struct{})

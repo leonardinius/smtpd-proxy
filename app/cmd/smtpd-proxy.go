@@ -25,8 +25,8 @@ var (
 	// BRANCH git branch
 	BRANCH = "dirty"
 
-	STOP_SIGNAL = ServerSignal(0)
-	signals     = [...]string{
+	ServerStopSignal = ServerSignal(0)
+	signals          = [...]string{
 		0: "ServerSignal[STOP]",
 	}
 )

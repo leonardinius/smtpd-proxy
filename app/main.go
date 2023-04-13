@@ -18,7 +18,7 @@ func main() {
 		signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 		<-stop
 		zlog.Warn("interrupt signal")
-		stopChannel <- cmd.STOP_SIGNAL
+		stopChannel <- cmd.ServerStopSignal
 	}()
 	cmd.Main(stopChannel, os.Args[1:]...)
 }

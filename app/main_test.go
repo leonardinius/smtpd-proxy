@@ -47,7 +47,7 @@ smtpd-proxy:
 	done := make(chan struct{})
 	go func() {
 		<-done
-		serverCh <- cmd.STOP_SIGNAL
+		serverCh <- cmd.ServerStopSignal
 	}()
 
 	finished := make(chan struct{})
