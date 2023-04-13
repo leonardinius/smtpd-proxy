@@ -51,7 +51,7 @@ windows: $(GOFILES)
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go test -race -timeout=120s -count 1 -parallel 4 -v ./... 2>&1
+	go test -race -timeout=120s -count 1 -parallel 8 -v ./... 2>&1
 
 ci-test: $(GOFILES)
 	-cd ${BUILDDIR}; \

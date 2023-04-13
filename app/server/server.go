@@ -47,6 +47,9 @@ func (srv *SrvBackend) Shutdown() error {
 }
 
 func (srv *SrvBackend) ListenAndServe() error {
+	if srv.smtp.TLSConfig != nil {
+		return srv.smtp.ListenAndServeTLS()
+	}
 	return srv.smtp.ListenAndServe()
 }
 

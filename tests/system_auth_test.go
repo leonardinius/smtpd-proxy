@@ -23,6 +23,7 @@ var messageBody string = strings.Join([]string{
 }, "\r\n")
 
 func TestSmokeAuthCredentials(t *testing.T) {
+	t.Parallel()
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	config := fmt.Sprintf(`
@@ -70,6 +71,7 @@ smtpd-proxy:
 }
 
 func TestSmokeAnonCredentialsOk(t *testing.T) {
+	t.Parallel()
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	config := fmt.Sprintf(`

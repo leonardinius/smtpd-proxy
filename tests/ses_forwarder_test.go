@@ -49,6 +49,8 @@ func (su *SESSystemTestSuite) SetupSuite() {
 	if err != nil {
 		su.T().Fatalf("Errors: %v ", err)
 	}
+
+	su.T().Parallel()
 }
 
 func (su *SESSystemTestSuite) /*  */ TearDownSuite() {
