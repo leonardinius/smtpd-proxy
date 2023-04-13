@@ -123,7 +123,7 @@ func ListenProxyAndServe(c *config.Config, ch <-chan ServerSignal) error {
 		}
 
 		signal := <-ch
-		zlog.Infof("Received signal: %s", signal)
+		zlog.Debugf("Received signal: %s", signal)
 		zlog.Infof("Shutdown server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
 	}()
 
