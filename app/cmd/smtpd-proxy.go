@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
+	"strconv"
 
 	"errors"
 
@@ -25,7 +24,25 @@ var (
 	COMMIT = "gitsha1"
 	// BRANCH git branch
 	BRANCH = "dirty"
+
+	STOP_SIGNAL = ServerSignal(0)
+	signals     = [...]string{
+		0: "ServerSignal[STOP]",
+	}
 )
+
+type ServerSignal int
+
+func (s ServerSignal) String() string {
+	if 0 <= s && int(s) < len(signals) {
+		str := signals[s]
+		if str != "" {
+			return str
+		}
+	}
+
+	return "ServerSignal[" + strconv.Itoa(int(s)) + "]"
+}
 
 // Opts with all cli commands and flags
 type Opts struct {
@@ -36,11 +53,11 @@ type Opts struct {
 var errorEmptyRegistry = errors.New("empty sender registry")
 
 // Main function
-func Main() {
+func Main(ch <-chan ServerSignal, args ...string) {
 	var opts Opts
 	p := flags.NewParser(&opts, flags.Default)
 
-	if _, err := p.Parse(); err != nil {
+	if _, err := p.ParseArgs(args); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 			os.Exit(0)
@@ -49,7 +66,7 @@ func Main() {
 		}
 	}
 
-	zlog.NewZapLogger(opts.Verbose)
+	zlog.SetNewZapLogger(opts.Verbose)
 	defer zlog.Sync()
 
 	fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
@@ -63,14 +80,15 @@ func Main() {
 	if err != nil {
 		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
 	}
-	err = RunProxy(cfg)
+
+	err = ListenProxyAndServe(cfg, ch)
 	if err != nil {
 		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
 	}
 }
 
-// RunProxy run proxy cmd
-func RunProxy(c *config.Config) error {
+// ListenProxyAndServe run proxy cmd
+func ListenProxyAndServe(c *config.Config, ch <-chan ServerSignal) error {
 	srvConfig := c.ServerConfig
 	tlsConfig, err := loadTLSConfig(srvConfig.ServerCertificatePath, srvConfig.ServerKeyPath)
 	if err != nil {
@@ -104,11 +122,9 @@ func RunProxy(c *config.Config) error {
 			panic(x)
 		}
 
-		// catch signal and invoke graceful termination
-		stop := make(chan os.Signal, 1)
-		signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-		<-stop
-		zlog.Warn("interrupt signal")
+		signal := <-ch
+		zlog.Infof("Received signal: %s", signal)
+		zlog.Infof("Shutdown server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
 	}()
 
 	zlog.Infof("Starting server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
@@ -160,26 +176,3 @@ func createUpstreamServers(upstreamServersConfig []config.UpstreamServer) (reg u
 
 	return reg, err
 }
-
-// // getDump reads runtime stack and returns as a string
-// func getDump() string {
-// 	maxSize := 5 * 1024 * 1024
-// 	stacktrace := make([]byte, maxSize)
-// 	length := runtime.Stack(stacktrace, true)
-// 	if length > maxSize {
-// 		length = maxSize
-// 	}
-// 	return string(stacktrace[:length])
-// }
-
-// // nolint:gochecknoinits // can't avoid it in this place
-// func init() {
-// 	// catch SIGQUIT and print stack traces
-// 	sigChan := make(chan os.Signal, 1)
-// 	go func() {
-// 		for range sigChan {
-// 			zlog.Infof("SIGQUIT detected, dump:\n%s", getDump())
-// 		}
-// 	}()
-// 	signal.Notify(sigChan, syscall.SIGQUIT)
-// }

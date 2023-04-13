@@ -2,13 +2,13 @@ package systemtest
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"fmt"
 	"log"
 	"net"
 	"os"
-	"syscall"
 	"time"
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
@@ -20,7 +20,7 @@ import (
 // BindHost host to bind to in local smoke tests
 const BindHost = "127.0.0.1"
 
-// RunMainWithConfig run aopp in test suite
+// RunMainWithConfig run app in test suite
 func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
 	var (
 		cfg *os.File
@@ -32,17 +32,16 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 	// comment this out to troubleshoot if the test fails
 	defer os.Remove(cfg.Name())
 
+	serverCh := make(chan cmd.ServerSignal)
 	done := make(chan struct{})
 	go func() {
 		<-done
-		e := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		require.NoError(t, e)
+		serverCh <- cmd.STOP_SIGNAL
 	}()
 
 	finished := make(chan struct{})
 	go func() {
-		os.Args = []string{"test", "--verbose", "-c", cfg.Name()}
-		cmd.Main()
+		cmd.Main(serverCh, "--verbose", "-c", cfg.Name())
 		close(finished)
 	}()
 
@@ -57,7 +56,11 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 		err = conn.Close()
 		zlog.Debugf("conn.Close() error: %v", err)
 	}()
-	test(t, conn)
+
+	t.Run(strconv.Itoa(port), func(t *testing.T) {
+		test(t, conn)
+	})
+
 }
 
 func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
@@ -72,13 +75,10 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	defer poll.Stop()
 	select {
 	case <-poll.C:
-		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
-		defer limitCancelFn()
-		conn, err = d.DialContext(limitCtx, "tcp", addr)
-		if err == nil {
+		conn = checkAddr(&d, addr)
+		if conn != nil {
 			break
 		}
-		conn = nil
 	case <-ctx.Done():
 		if ctx.Err() != nil {
 			t.Fatal("SMTP open error", ctx.Err())
@@ -92,6 +92,15 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 		t.Fatal("SMTP open error", err)
 	}
 	return conn
+}
+
+func checkAddr(d *net.Dialer, addr string) net.Conn {
+	limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer limitCancelFn()
+	if conn, err := d.DialContext(limitCtx, "tcp", addr); err == nil {
+		return conn
+	}
+	return nil
 }
 
 func createConfigurationFle(content string) (tmpFile *os.File, err error) {

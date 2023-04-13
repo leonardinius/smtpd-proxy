@@ -9,6 +9,7 @@ import (
 )
 
 func TestSmokeLoadConfigShouldBeOk(t *testing.T) {
+	t.Parallel()
 	data := `
 smtpd-proxy:
   listen: 127.0.0.1:1025
@@ -70,8 +71,8 @@ smtpd-proxy:
 }
 
 func TestLoadEmptyFileShouldFail(t *testing.T) {
+	t.Parallel()
 	data := "\n"
-
 	c, err := Parse(strings.NewReader(data))
 	require.Nil(t, c)
 	require.NotNil(t, err)
@@ -79,6 +80,7 @@ func TestLoadEmptyFileShouldFail(t *testing.T) {
 }
 
 func TestLoadConfigDefaults(t *testing.T) {
+	t.Parallel()
 	data := `
 smtpd-proxy:
   upstream-servers:

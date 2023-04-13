@@ -1,6 +1,8 @@
 package zlog
 
 import (
+	"sync"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -8,7 +10,10 @@ import (
 // Logger type definition of looger
 type Logger *zap.SugaredLogger
 
-var _log Logger
+var _Log struct {
+	logger *zap.SugaredLogger
+	lock   sync.RWMutex
+}
 
 // Debug uses fmt.Sprint to construct and log a message.
 func Debug(args ...interface{}) {
@@ -112,14 +117,23 @@ func Fatalw(msg string, keysAndValues ...interface{}) {
 
 // Get returns main logger
 func Get() *zap.SugaredLogger {
-	if _log == nil {
+	_Log.lock.RLock()
+	defer _Log.lock.RUnlock()
+
+	if _Log.logger == nil {
 		panic("logger is absent")
 	}
-	return _log
+	return _Log.logger
 }
 
-// NewZapLogger creates new instance of zap logger
-func NewZapLogger(verbose bool) Logger {
+// SetNewZapLogger creates new instance of zap logger
+func SetNewZapLogger(verbose bool) {
+	_Log.lock.Lock()
+	defer _Log.lock.Unlock()
+	if log := _Log.logger; log != nil {
+		defer log.Sync()
+	}
+
 	var cfg zap.Config
 	var stacktraceLevel zapcore.Level
 	if verbose {
@@ -138,8 +152,8 @@ func NewZapLogger(verbose bool) Logger {
 		zap.AddCallerSkip(1),
 		zap.AddStacktrace(stacktraceLevel),
 	)
-	_log = zlogger.Sugar()
-	return _log
+
+	_Log.logger = zlogger.Sugar()
 }
 
 // Sync flushes the log buffer

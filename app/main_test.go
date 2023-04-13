@@ -8,16 +8,18 @@ import (
 	"net"
 	"os"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 
+	"github.com/leonardinius/smtpd-proxy/app/cmd"
 	"github.com/stretchr/testify/require"
 )
 
 const bindHost = "127.0.0.1"
 
 func Test_Main(t *testing.T) {
+	t.Parallel()
+
 	port := dynamicPort()
 	yamlConfig := fmt.Sprintf(`
 smtpd-proxy:
@@ -41,17 +43,16 @@ smtpd-proxy:
 	// comment this out to troubleshoot if the test fails
 	defer os.Remove(cfg.Name())
 
+	serverCh := make(chan cmd.ServerSignal)
 	done := make(chan struct{})
 	go func() {
 		<-done
-		e := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		require.NoError(t, e)
+		serverCh <- cmd.STOP_SIGNAL
 	}()
 
 	finished := make(chan struct{})
 	go func() {
-		os.Args = []string{"test", "-c", cfg.Name()}
-		main()
+		cmd.Main(serverCh, "-c", cfg.Name())
 		close(finished)
 	}()
 
@@ -104,13 +105,10 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	poll := time.Tick(20 * time.Millisecond)
 	select {
 	case <-poll:
-		limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
-		defer limitCancelFn()
-		conn, err = d.DialContext(limitCtx, "tcp", addr)
-		if err == nil {
+		conn = checkAddr(&d, addr)
+		if conn != nil {
 			break
 		}
-		conn = nil
 	case <-ctx.Done():
 		if ctx.Err() != nil {
 			t.Fatal("SMTP open error", ctx.Err())
@@ -124,6 +122,15 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 		t.Fatal("SMTP open error", err)
 	}
 	return conn
+}
+
+func checkAddr(d *net.Dialer, addr string) net.Conn {
+	limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer limitCancelFn()
+	if conn, err := d.DialContext(limitCtx, "tcp", addr); err == nil {
+		return conn
+	}
+	return nil
 }
 
 func readStrings(b *bufio.Reader) []string {
