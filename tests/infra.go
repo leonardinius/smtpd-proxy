@@ -2,7 +2,6 @@ package systemtest
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	"fmt"
@@ -57,10 +56,7 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 		zlog.Debugf("conn.Close() error: %v", err)
 	}()
 
-	t.Run(strconv.Itoa(port), func(t *testing.T) {
-		test(t, conn)
-	})
-
+	test(t, conn)
 }
 
 func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {

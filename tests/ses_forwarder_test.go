@@ -66,7 +66,6 @@ func (su *SESSystemTestSuite) TestSmokeSESForwardAcceptsSimpleEMail() {
 	require.NoError(su.T(), err)
 	config := fmt.Sprintf(`
 smtpd-proxy:
-  name: '%s'
   listen: %s:%d
   ehlo: localhost
   username: user@example.com
@@ -79,7 +78,7 @@ smtpd-proxy:
       aws_access_key_id: amz-key-1
       aws_secret_access_key: amz-**-secret
       region: us-east-1
-`, su.T().Name(), BindHost, port, sesEndpoint)
+`, BindHost, port, sesEndpoint)
 	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		fromEmail := "<gotest-simple@esmtp.email>"
 		// Setup authentication information.
@@ -118,7 +117,6 @@ func (su *SESSystemTestSuite) TestSmokeSESForwardAcceptsEMailWithAttachments() {
 	require.NoError(su.T(), err)
 	config := fmt.Sprintf(`
 smtpd-proxy:
-  name: '%s'
   listen: %s:%d
   ehlo: localhost
   username: user@example.com
@@ -131,7 +129,7 @@ smtpd-proxy:
       aws_access_key_id: amz-key-1
       aws_secret_access_key: amz-**-secret
       region: us-east-1
-`, su.T().Name(), BindHost, port, sesEndpoint)
+`, BindHost, port, sesEndpoint)
 	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		ses := newSesClient(t, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String("<gotest-attachment@esmtp.email>")})

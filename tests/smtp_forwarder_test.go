@@ -67,7 +67,6 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardSimpleEmail() {
 	require.NoError(su.T(), err)
 	config := fmt.Sprintf(`
 smtpd-proxy:
-  name: '%s'
   listen: %s
   ehlo: localhost
   username: user@example.com
@@ -79,7 +78,7 @@ smtpd-proxy:
       addr: %s:%s
       host: %s
       auth: anon
-`, su.T().Name(), proxyEndpoint, smtpHost, smtpPort, smtpHost)
+`, proxyEndpoint, smtpHost, smtpPort, smtpHost)
 	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		fromEmail := "<gotest-simple-smtp@esmtp.email>"
 		// Setup authentication information.
@@ -114,7 +113,6 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardAcceptsEMailWithAttachments()
 	require.NoError(su.T(), err)
 	config := fmt.Sprintf(`
 smtpd-proxy:
-  name: '%s'
   listen: %s
   ehlo: localhost
   username: user@example.com
@@ -126,7 +124,7 @@ smtpd-proxy:
       addr: %s:%s
       host: %s
       auth: anon
-`, su.T().Name(), proxyEndpoint, smtpHost, smtpPort, smtpHost)
+`, proxyEndpoint, smtpHost, smtpPort, smtpHost)
 	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		// Setup authentication information.
 		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
