@@ -60,10 +60,10 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardSimpleEmail() {
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	smtpHost, err := su.smtpd.Host(su.ctx)
 	require.NoError(su.T(), err)
-	_smtpPort, err := su.smtpd.MappedPort(su.ctx, "5025/tcp")
+	_smtpPort, err := su.smtpd.MappedPort(su.ctx, "8025/tcp")
 	require.NoError(su.T(), err)
 	smtpPort := strings.SplitN(string(_smtpPort), "/", 2)[0]
-	apiEndpoint, err := su.smtpd.PortEndpoint(su.ctx, "5080/tcp", "http")
+	apiEndpoint, err := su.smtpd.PortEndpoint(su.ctx, "8080/tcp", "http")
 	require.NoError(su.T(), err)
 	config := fmt.Sprintf(`
 smtpd-proxy:
@@ -106,10 +106,10 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardAcceptsEMailWithAttachments()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	smtpHost, err := su.smtpd.Host(su.ctx)
 	require.NoError(su.T(), err)
-	_smtpPort, err := su.smtpd.MappedPort(su.ctx, "5025/tcp")
+	_smtpPort, err := su.smtpd.MappedPort(su.ctx, "8025/tcp")
 	require.NoError(su.T(), err)
 	smtpPort := strings.SplitN(string(_smtpPort), "/", 2)[0]
-	apiEndpoint, err := su.smtpd.PortEndpoint(su.ctx, "5080/tcp", "http")
+	apiEndpoint, err := su.smtpd.PortEndpoint(su.ctx, "8080/tcp", "http")
 	require.NoError(su.T(), err)
 	config := fmt.Sprintf(`
 smtpd-proxy:
@@ -156,9 +156,9 @@ func convertToBase64Fragment(s string) string {
 func initFakeSMTPContainer(ctx context.Context) (container tc.Container, err error) {
 	localstackReq := tc.ContainerRequest{
 		Image:        "gessnerfl/fake-smtp-server",
-		ExposedPorts: []string{"5080/tcp", "5081/tcp", "5025/tcp"},
+		ExposedPorts: []string{"8080/tcp", "8081/tcp", "8025/tcp"},
 		Env:          map[string]string{},
-		WaitingFor:   wait.ForListeningPort("5080/tcp"),
+		WaitingFor:   wait.ForListeningPort("8080/tcp"),
 	}
 
 	container, err = tc.GenericContainer(ctx, tc.GenericContainerRequest{
@@ -168,26 +168,7 @@ func initFakeSMTPContainer(ctx context.Context) (container tc.Container, err err
 	return
 }
 
-// GET http://127.0.0.1:52472/api/email?page=0&size=10&sort=DESC
-//
-//	[{
-//	    "id": 0,
-//	    "fromAddress": "string",
-//	    "toAddress": "string",
-//	    "subject": "string",
-//	    "receivedOn": "2022-09-01T19:30:05.509Z",
-//	    "rawData": "string",
-//	    "attachments": [
-//	      {
-//	        "id": 0,
-//	        "filename": "string",
-//	        "data":  "string"
-//	      }
-//	    ]
-//	  }]
-//
-// via https://transform.tools/json-to-go
-type fakerAPIEmail struct {
+type fakerAPIContentItem struct {
 	ID          int       `json:"id"`
 	FromAddress string    `json:"fromAddress"`
 	ToAddress   string    `json:"toAddress"`
@@ -200,22 +181,31 @@ type fakerAPIEmail struct {
 		Data     string `json:"data"`
 	} `json:"attachments"`
 }
+type fakerAPIEmail struct {
+	Content []fakerAPIContentItem `json:"content"`
+	Page    struct {
+		Number        int `json:"number"`
+		Size          int `json:"size"`
+		Total         int `json:"total"`
+		TotalElements int `json:"totalElements"`
+	} `json:"page"`
+}
 
-func requireFakerReceivedEmailWithContains(t *testing.T, fakerAPIBaseURL, needle string) *fakerAPIEmail {
-	var forwardedEmail *fakerAPIEmail
+func requireFakerReceivedEmailWithContains(t *testing.T, fakerAPIBaseURL, needle string) *fakerAPIContentItem {
+	var forwardedEmail *fakerAPIContentItem
 
 	assert.Eventuallyf(t,
 		func() bool {
-			// GET http://127.0.0.1:52472/api/email?page=0&size=10&sort=DESC
+			// GET http://127.0.0.1:52472/api/emails?page=0&size=10&sort=DESC
 			params := url.Values{}
 			params.Add("page", "0")
 			params.Add("size", "255")
 			params.Add("sort", "DESC")
-			res, err := http.Get(fmt.Sprintf("%s/api/email?%s", fakerAPIBaseURL, params.Encode()))
+			res, err := http.Get(fmt.Sprintf("%s/api/emails?%s", fakerAPIBaseURL, params.Encode()))
 			require.NoError(t, err)
 			defer res.Body.Close()
 
-			var data []fakerAPIEmail
+			var data fakerAPIEmail
 			if body, err := io.ReadAll(res.Body); err == nil {
 				bodyAsString := string(body)
 				if !strings.Contains(bodyAsString, needle) {
@@ -227,7 +217,7 @@ func requireFakerReceivedEmailWithContains(t *testing.T, fakerAPIBaseURL, needle
 				return false
 			}
 
-			for _, entry := range data {
+			for _, entry := range data.Content {
 				if strings.Contains(entry.RawData, needle) {
 					scopedReference := entry
 					forwardedEmail = &scopedReference
