@@ -2,6 +2,7 @@ package systemtest
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"fmt"
@@ -117,13 +118,31 @@ func createConfigurationFle(content string) (tmpFile *os.File, err error) {
 	return
 }
 
+var acquiredPorts = new(sync.Map)
+
 // DynamicPort supplies random free net ports to use
 func DynamicPort() int {
+	port := dynamicPort()
+	for {
+		if _, loaded := acquiredPorts.LoadOrStore(port, true); !loaded {
+			break
+		}
+		port = dynamicPort()
+	}
+	return port
+}
+
+func dynamicPort() int {
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", BindHost))
 	if err != nil {
 		panic(err)
 	}
-	defer listener.Close()
+	defer func() {
+		err := listener.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	port := listener.Addr().(*net.TCPAddr).Port
 	return port
 }
