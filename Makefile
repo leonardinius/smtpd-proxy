@@ -51,13 +51,13 @@ windows: $(GOFILES)
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go test -race -timeout=120s -count 1 -parallel 8 -v ./... 2>&1
+	go test -shuffle=on -race -timeout=120s -count 1 -parallel 8 -v ./... 2>&1
 
 ci-test: $(GOFILES)
 	-cd ${BUILDDIR}; \
 	mkdir -p ${BUILDOUT}; \
 	go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest;
-	go test -race -timeout=120s -count 1 -parallel 8 -v ./... -json 2>&1 | tee ${BUILDOUT}/${TEST_REPORT} | gotestfmt
+	go test -shuffle=on -race -timeout=120s -count 1 -parallel 8 -v ./... -json 2>&1 | tee ${BUILDOUT}/${TEST_REPORT} | gotestfmt
 
 lint: $(GOFILES)
 	-cd ${BUILDDIR}; \
