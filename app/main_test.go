@@ -63,7 +63,7 @@ smtpd-proxy:
 	}()
 
 	{
-		conn := waitForPortListenStart(t, ctx, port)
+		conn := waitForPortListenStart(ctx, t, port)
 		defer conn.Close()
 
 		bufReader := bufio.NewReader(conn)
@@ -96,7 +96,7 @@ smtpd-proxy:
 	}
 }
 
-func waitForPortListenStart(t *testing.T, ctx context.Context, port int) (conn net.Conn) {
+func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)

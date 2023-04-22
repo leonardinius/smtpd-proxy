@@ -21,7 +21,7 @@ import (
 const BindHost = "127.0.0.1"
 
 // RunMainWithConfig run app in test suite
-func RunMainWithConfig(t *testing.T, ctx context.Context, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
+func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
 	t.Helper()
 
 	var (
@@ -51,7 +51,7 @@ func RunMainWithConfig(t *testing.T, ctx context.Context, yamlConfig string, por
 		<-finished
 	}()
 
-	conn := waitForPortListenStart(t, ctx, port)
+	conn := waitForPortListenStart(ctx, t, port)
 	defer func() {
 		err = conn.Close()
 		zlog.Debugf("conn.Close() error: %v", err)
@@ -60,7 +60,7 @@ func RunMainWithConfig(t *testing.T, ctx context.Context, yamlConfig string, por
 	test(t, conn)
 }
 
-func waitForPortListenStart(t *testing.T, ctx context.Context, port int) (conn net.Conn) {
+func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", BindHost, port)

@@ -79,7 +79,7 @@ smtpd-proxy:
       aws_secret_access_key: amz-**-secret
       region: us-east-1
 `, BindHost, port, sesEndpoint)
-	RunMainWithConfig(su.T(), su.ctx, config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(su.ctx, su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		fromEmail := "<gotest-simple@esmtp.email>"
 		// Setup authentication information.
 		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
@@ -95,7 +95,7 @@ smtpd-proxy:
 		err := smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
 		require.ErrorContains(t, err, "Email address not verified <gotest-simple@esmtp.email>")
 
-		ses := newSesClient(t, su.ctx, sesEndpoint)
+		ses := newSesClient(su.ctx, t, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String(fromEmail)})
 		require.NoError(t, err)
 		err = smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
@@ -130,8 +130,8 @@ smtpd-proxy:
       aws_secret_access_key: amz-**-secret
       region: us-east-1
 `, BindHost, port, sesEndpoint)
-	RunMainWithConfig(su.T(), su.ctx, config, port, func(t *testing.T, conn net.Conn) {
-		ses := newSesClient(t, su.ctx, sesEndpoint)
+	RunMainWithConfig(su.ctx, su.T(), config, port, func(t *testing.T, conn net.Conn) {
+		ses := newSesClient(su.ctx, t, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String("<gotest-attachment@esmtp.email>")})
 		require.NoError(t, err, "failed to verify gotest-attachment@esmtp.email")
 
@@ -184,7 +184,7 @@ func iniFakeSMTPContainer(ctx context.Context) (container tc.Container, err erro
 	return
 }
 
-func newSesClient(t *testing.T, ctx context.Context, endpoint string) *awsses.Client {
+func newSesClient(ctx context.Context, t *testing.T, endpoint string) *awsses.Client {
 	endpointResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			PartitionID:   "aws",

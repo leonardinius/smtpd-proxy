@@ -39,7 +39,7 @@ smtpd-proxy:
   upstream-servers:
   - type: log
 `, proxyEndpoint)
-	RunMainWithConfig(t, ctx, config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(ctx, t, config, port, func(t *testing.T, conn net.Conn) {
 		credentials := []struct {
 			name string
 			auth smtp.Auth
@@ -87,7 +87,7 @@ smtpd-proxy:
   upstream-servers:
   - type: log
 `, proxyEndpoint)
-	RunMainWithConfig(t, ctx, config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(ctx, t, config, port, func(t *testing.T, conn net.Conn) {
 		err := smtp.SendMail(proxyEndpoint, nil, "sender@example.org", reciepientsTo, []byte(messageBody))
 		assert.NoError(t, err)
 	})
