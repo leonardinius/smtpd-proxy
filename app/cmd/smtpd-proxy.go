@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
@@ -66,6 +67,7 @@ func Main(ch <-chan ServerSignal, args ...string) {
 		}
 	}
 
+	ctx := context.Background()
 	zlog.SetNewZapLogger(opts.Verbose)
 	defer zlog.Sync()
 
@@ -81,21 +83,21 @@ func Main(ch <-chan ServerSignal, args ...string) {
 		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
 	}
 
-	err = ListenProxyAndServe(cfg, ch)
+	err = ListenProxyAndServe(ctx, cfg, ch)
 	if err != nil {
 		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
 	}
 }
 
 // ListenProxyAndServe run proxy cmd
-func ListenProxyAndServe(c *config.Config, ch <-chan ServerSignal) error {
+func ListenProxyAndServe(ctx context.Context, c *config.Config, ch <-chan ServerSignal) error {
 	srvConfig := c.ServerConfig
 	tlsConfig, err := loadTLSConfig(srvConfig.ServerCertificatePath, srvConfig.ServerKeyPath)
 	if err != nil {
 		return err
 	}
 
-	upstreamServers, err := createUpstreamServers(srvConfig.UpstreamServers)
+	upstreamServers, err := createUpstreamServers(ctx, srvConfig.UpstreamServers)
 	if err != nil {
 		return err
 	}
@@ -105,6 +107,7 @@ func ListenProxyAndServe(c *config.Config, ch <-chan ServerSignal) error {
 	}
 
 	srv := server.NewServer(
+		ctx,
 		srvConfig.Listen,
 		srvConfig.Ehlo,
 	).WithOptions(
@@ -142,7 +145,7 @@ func loadTLSConfig(serverCertificatePath, serverKeyPath string) (*tls.Config, er
 	return &tls.Config{Certificates: []tls.Certificate{cer}, MinVersion: tls.VersionTLS12}, nil
 }
 
-func createUpstreamServers(upstreamServersConfig []config.UpstreamServer) (reg upstream.Registry, err error) {
+func createUpstreamServers(ctx context.Context, upstreamServersConfig []config.UpstreamServer) (reg upstream.Registry, err error) {
 	reg = upstream.NewEmptyRegistry()
 	for _, serverConfig := range upstreamServersConfig {
 		var handler upstream.Forwarder
@@ -151,13 +154,13 @@ func createUpstreamServers(upstreamServersConfig []config.UpstreamServer) (reg u
 		switch serverConfig.Type {
 		case "smtp":
 			srv := forwarder.NewSMTPServer()
-			handler, _err = srv.Configure(serverConfig.Settings)
+			handler, _err = srv.Configure(ctx, serverConfig.Settings)
 		case "ses":
 			srv := forwarder.NewSESServer()
-			handler, _err = srv.Configure(serverConfig.Settings)
+			handler, _err = srv.Configure(ctx, serverConfig.Settings)
 		case "log":
 			srv := forwarder.NewLogServer()
-			handler, err = srv.Configure(serverConfig.Settings)
+			handler, err = srv.Configure(ctx, serverConfig.Settings)
 		default:
 			_err = fmt.Errorf("unrecognized server type: %s. allowed values: smtp, ses, log", serverConfig.Type)
 		}

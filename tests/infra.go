@@ -21,7 +21,7 @@ import (
 const BindHost = "127.0.0.1"
 
 // RunMainWithConfig run app in test suite
-func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
+func RunMainWithConfig(t *testing.T, ctx context.Context, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
 	t.Helper()
 
 	var (
@@ -51,7 +51,7 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 		<-finished
 	}()
 
-	conn := waitForPortListenStart(t, port)
+	conn := waitForPortListenStart(t, ctx, port)
 	defer func() {
 		err = conn.Close()
 		zlog.Debugf("conn.Close() error: %v", err)
@@ -60,7 +60,7 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 	test(t, conn)
 }
 
-func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
+func waitForPortListenStart(t *testing.T, ctx context.Context, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", BindHost, port)
@@ -70,7 +70,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 
 	select {
 	case <-poll.C:
-		conn, _ = checkAddr(&d, addr)
+		conn, _ = checkAddr(ctx, &d, addr)
 		if conn != nil {
 			break
 		}
@@ -87,8 +87,8 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	return conn
 }
 
-func checkAddr(d *net.Dialer, addr string) (net.Conn, error) {
-	limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
+func checkAddr(ctx context.Context, d *net.Dialer, addr string) (net.Conn, error) {
+	limitCtx, limitCancelFn := context.WithTimeout(ctx, 50*time.Millisecond)
 	defer limitCancelFn()
 	return d.DialContext(limitCtx, "tcp", addr)
 }

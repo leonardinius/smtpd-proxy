@@ -32,8 +32,8 @@ type session struct {
 }
 
 // NewBackend Creates new backend
-func newBackend(authLoginFunc AuthFunc) *backend {
-	return &backend{authLoginFunc: authLoginFunc, ctx: context.Background()}
+func newBackend(ctx context.Context, authLoginFunc AuthFunc) *backend {
+	return &backend{authLoginFunc: authLoginFunc, ctx: ctx}
 }
 
 var _ smtp.Backend = (*backend)(nil)

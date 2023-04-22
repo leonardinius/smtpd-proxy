@@ -79,7 +79,7 @@ smtpd-proxy:
       host: %s
       auth: anon
 `, proxyEndpoint, smtpHost, smtpPort, smtpHost)
-	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(su.T(), su.ctx, config, port, func(t *testing.T, conn net.Conn) {
 		fromEmail := "<gotest-simple-smtp@esmtp.email>"
 		// Setup authentication information.
 		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
@@ -125,7 +125,7 @@ smtpd-proxy:
       host: %s
       auth: anon
 `, proxyEndpoint, smtpHost, smtpPort, smtpHost)
-	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(su.T(), su.ctx, config, port, func(t *testing.T, conn net.Conn) {
 		// Setup authentication information.
 		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
 		envelope := email.NewEmail()

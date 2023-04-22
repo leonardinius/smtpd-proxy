@@ -79,7 +79,7 @@ smtpd-proxy:
       aws_secret_access_key: amz-**-secret
       region: us-east-1
 `, BindHost, port, sesEndpoint)
-	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(su.T(), su.ctx, config, port, func(t *testing.T, conn net.Conn) {
 		fromEmail := "<gotest-simple@esmtp.email>"
 		// Setup authentication information.
 		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
@@ -95,7 +95,7 @@ smtpd-proxy:
 		err := smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
 		require.ErrorContains(t, err, "Email address not verified <gotest-simple@esmtp.email>")
 
-		ses := newSesClient(t, sesEndpoint)
+		ses := newSesClient(t, su.ctx, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String(fromEmail)})
 		require.NoError(t, err)
 		err = smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
@@ -130,8 +130,8 @@ smtpd-proxy:
       aws_secret_access_key: amz-**-secret
       region: us-east-1
 `, BindHost, port, sesEndpoint)
-	RunMainWithConfig(su.T(), config, port, func(t *testing.T, conn net.Conn) {
-		ses := newSesClient(t, sesEndpoint)
+	RunMainWithConfig(su.T(), su.ctx, config, port, func(t *testing.T, conn net.Conn) {
+		ses := newSesClient(t, su.ctx, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String("<gotest-attachment@esmtp.email>")})
 		require.NoError(t, err, "failed to verify gotest-attachment@esmtp.email")
 
@@ -184,7 +184,7 @@ func iniFakeSMTPContainer(ctx context.Context) (container tc.Container, err erro
 	return
 }
 
-func newSesClient(t *testing.T, endpoint string) *awsses.Client {
+func newSesClient(t *testing.T, ctx context.Context, endpoint string) *awsses.Client {
 	endpointResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			PartitionID:   "aws",
@@ -194,7 +194,7 @@ func newSesClient(t *testing.T, endpoint string) *awsses.Client {
 	})
 	credentialsProvider := awscreds.
 		NewStaticCredentialsProvider("amz-key-1", "amz-**-secret", "")
-	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+	cfg, err := awsconfig.LoadDefaultConfig(ctx,
 		awsconfig.WithEndpointResolverWithOptions(endpointResolver),
 		awsconfig.WithRegion("us-east-1"),
 		awsconfig.WithCredentialsProvider(credentialsProvider),

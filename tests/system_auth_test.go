@@ -1,6 +1,7 @@
 package systemtest
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/smtp"
@@ -24,6 +25,8 @@ var messageBody string = strings.Join([]string{
 
 func TestSmokeAuthCredentials(t *testing.T) {
 	t.Parallel()
+
+	ctx := context.Background()
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	config := fmt.Sprintf(`
@@ -36,7 +39,7 @@ smtpd-proxy:
   upstream-servers:
   - type: log
 `, proxyEndpoint)
-	RunMainWithConfig(t, config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(t, ctx, config, port, func(t *testing.T, conn net.Conn) {
 		credentials := []struct {
 			name string
 			auth smtp.Auth
@@ -72,6 +75,8 @@ smtpd-proxy:
 
 func TestSmokeAnonCredentialsOk(t *testing.T) {
 	t.Parallel()
+
+	ctx := context.Background()
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	config := fmt.Sprintf(`
@@ -82,7 +87,7 @@ smtpd-proxy:
   upstream-servers:
   - type: log
 `, proxyEndpoint)
-	RunMainWithConfig(t, config, port, func(t *testing.T, conn net.Conn) {
+	RunMainWithConfig(t, ctx, config, port, func(t *testing.T, conn net.Conn) {
 		err := smtp.SendMail(proxyEndpoint, nil, "sender@example.org", reciepientsTo, []byte(messageBody))
 		assert.NoError(t, err)
 	})

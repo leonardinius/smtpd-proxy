@@ -32,7 +32,7 @@ func NewSMTPServer() upstream.Server {
 	return new(smptUpstream)
 }
 
-func (u *smptUpstream) Configure(settings map[string]any) (upstream.Forwarder, error) {
+func (u *smptUpstream) Configure(ctx context.Context, settings map[string]any) (upstream.Forwarder, error) {
 	bytes, err := json.Marshal(settings)
 	if err != nil {
 		return nil, err

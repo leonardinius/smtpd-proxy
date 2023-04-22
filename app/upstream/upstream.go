@@ -31,7 +31,7 @@ func NewEmailFromReader(r io.Reader) (*Email, error) {
 
 // Server inits the connecion pool to the server
 type Server interface {
-	Configure(config map[string]any) (Forwarder, error)
+	Configure(ctx context.Context, config map[string]any) (Forwarder, error)
 }
 
 // Forwarder queues individual email

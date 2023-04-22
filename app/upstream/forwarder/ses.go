@@ -38,7 +38,7 @@ func NewSESServer() upstream.Server {
 	return new(sesUpstream)
 }
 
-func (u *sesUpstream) Configure(settings map[string]any) (upstream.Forwarder, error) {
+func (u *sesUpstream) Configure(ctx context.Context, settings map[string]any) (upstream.Forwarder, error) {
 	bytes, err := json.Marshal(settings)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (u *sesUpstream) Configure(settings map[string]any) (upstream.Forwarder, er
 		// returning EndpointNotFoundError will allow the service to fallback to its default resolution
 		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
 	})
-	cfg, err := config.LoadDefaultConfig(context.Background(),
+	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithEndpointResolverWithOptions(endpointResolver),
 		config.WithRegion(c.Region),
 		config.WithCredentialsProvider(credentialsProvider),

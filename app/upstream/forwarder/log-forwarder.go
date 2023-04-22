@@ -23,7 +23,7 @@ func NewLogServer() upstream.Server {
 	return new(logServer)
 }
 
-func (u *logServer) Configure(settings map[string]any) (upstream.Forwarder, error) {
+func (u *logServer) Configure(ctx context.Context, settings map[string]any) (upstream.Forwarder, error) {
 	bytes, err := json.Marshal(settings)
 	if err != nil {
 		return nil, err

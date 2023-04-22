@@ -20,6 +20,7 @@ const bindHost = "127.0.0.1"
 func Test_Main(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	port := dynamicPort()
 	yamlConfig := fmt.Sprintf(`
 smtpd-proxy:
@@ -62,7 +63,7 @@ smtpd-proxy:
 	}()
 
 	{
-		conn := waitForPortListenStart(t, port)
+		conn := waitForPortListenStart(t, ctx, port)
 		defer conn.Close()
 
 		bufReader := bufio.NewReader(conn)
@@ -95,7 +96,7 @@ smtpd-proxy:
 	}
 }
 
-func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
+func waitForPortListenStart(t *testing.T, ctx context.Context, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)
@@ -104,7 +105,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 
 	select {
 	case <-poll.C:
-		conn, _ = checkAddr(&d, addr)
+		conn, _ = checkAddr(ctx, &d, addr)
 		if conn != nil {
 			break
 		}
@@ -121,8 +122,8 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	return conn
 }
 
-func checkAddr(d *net.Dialer, addr string) (net.Conn, error) {
-	limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
+func checkAddr(ctx context.Context, d *net.Dialer, addr string) (net.Conn, error) {
+	limitCtx, limitCancelFn := context.WithTimeout(ctx, 50*time.Millisecond)
 	defer limitCancelFn()
 	return d.DialContext(limitCtx, "tcp", addr)
 }
