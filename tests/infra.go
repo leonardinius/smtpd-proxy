@@ -70,7 +70,7 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 
 	select {
 	case <-poll.C:
-		conn = checkAddr(&d, addr)
+		conn, _ = checkAddr(&d, addr)
 		if conn != nil {
 			break
 		}
@@ -87,13 +87,10 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	return conn
 }
 
-func checkAddr(d *net.Dialer, addr string) net.Conn {
+func checkAddr(d *net.Dialer, addr string) (net.Conn, error) {
 	limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer limitCancelFn()
-	if conn, err := d.DialContext(limitCtx, "tcp", addr); err == nil {
-		return conn
-	}
-	return nil
+	return d.DialContext(limitCtx, "tcp", addr)
 }
 
 func createConfigurationFle(tempdir, content string) (tmpFile *os.File, err error) {
