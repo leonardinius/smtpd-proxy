@@ -58,6 +58,8 @@ type MockRandom struct {
 	Values []int
 }
 
+var _ randInt = (*MockRandom)(nil)
+
 func (m *MockRandom) Intn(n int) int {
 	i := m.Values[0]
 	m.Values = m.Values[1:]

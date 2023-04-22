@@ -22,15 +22,15 @@ const BindHost = "127.0.0.1"
 
 // RunMainWithConfig run app in test suite
 func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
+	t.Helper()
+
 	var (
 		cfg *os.File
 		err error
 	)
-	if cfg, err = createConfigurationFle(yamlConfig); err != nil {
+	if cfg, err = createConfigurationFle(t.TempDir(), yamlConfig); err != nil {
 		t.Fatal("Failed to create temporary comfiguration file", err)
 	}
-	// comment this out to troubleshoot if the test fails
-	defer os.Remove(cfg.Name())
 
 	serverCh := make(chan cmd.ServerSignal)
 	done := make(chan struct{})
@@ -63,30 +63,26 @@ func RunMainWithConfig(t *testing.T, yamlConfig string, port int, test func(t *t
 func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
-
 	addr := fmt.Sprintf("%s:%d", BindHost, port)
-	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelFn()
 
 	poll := time.NewTicker(20 * time.Millisecond)
 	defer poll.Stop()
+
 	select {
 	case <-poll.C:
 		conn = checkAddr(&d, addr)
 		if conn != nil {
 			break
 		}
-	case <-ctx.Done():
-		if ctx.Err() != nil {
-			t.Fatal("SMTP open error", ctx.Err())
-		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("SMTP open timeout")
 		break
 	}
 
 	require.NotNil(t, conn)
-	err = conn.SetDeadline(time.Now().Add(500 * time.Millisecond))
+	err = conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
 	if err != nil {
-		t.Fatal("SMTP open error", err)
+		t.Fatal("SMTP set connection deadline error", err)
 	}
 	return conn
 }
@@ -100,8 +96,8 @@ func checkAddr(d *net.Dialer, addr string) net.Conn {
 	return nil
 }
 
-func createConfigurationFle(content string) (tmpFile *os.File, err error) {
-	tmpFile, err = os.CreateTemp(os.TempDir(), "smtpd-proxy-*-test.yml")
+func createConfigurationFle(tempdir, content string) (tmpFile *os.File, err error) {
+	tmpFile, err = os.CreateTemp(tempdir, "smtpd-proxy-*-test.yml")
 	if err != nil {
 		log.Fatal("Cannot create temporary file", err)
 	}

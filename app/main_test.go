@@ -37,11 +37,10 @@ smtpd-proxy:
 		cfg *os.File
 		err error
 	)
-	if cfg, err = createConfigurationFle(yamlConfig); err != nil {
+
+	if cfg, err = createConfigurationFle(t.TempDir(), yamlConfig); err != nil {
 		t.Fatal("Failed to create temporary comfiguration file", err)
 	}
-	// comment this out to troubleshoot if the test fails
-	defer os.Remove(cfg.Name())
 
 	serverCh := make(chan cmd.ServerSignal)
 	done := make(chan struct{})
@@ -100,37 +99,32 @@ func waitForPortListenStart(t *testing.T, port int) (conn net.Conn) {
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)
-	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelFn()
-	poll := time.Tick(20 * time.Millisecond)
+	poll := time.NewTicker(20 * time.Millisecond)
+	defer poll.Stop()
+
 	select {
-	case <-poll:
-		conn = checkAddr(&d, addr)
+	case <-poll.C:
+		conn, _ = checkAddr(&d, addr)
 		if conn != nil {
 			break
 		}
-	case <-ctx.Done():
-		if ctx.Err() != nil {
-			t.Fatal("SMTP open error", ctx.Err())
-		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("SMTP open timeout")
 		break
 	}
 
 	require.NotNil(t, conn)
 	err = conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
 	if err != nil {
-		t.Fatal("SMTP open error", err)
+		t.Fatal("SMTP set connection deadline error", err)
 	}
 	return conn
 }
 
-func checkAddr(d *net.Dialer, addr string) net.Conn {
+func checkAddr(d *net.Dialer, addr string) (net.Conn, error) {
 	limitCtx, limitCancelFn := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer limitCancelFn()
-	if conn, err := d.DialContext(limitCtx, "tcp", addr); err == nil {
-		return conn
-	}
-	return nil
+	return d.DialContext(limitCtx, "tcp", addr)
 }
 
 func readStrings(b *bufio.Reader) []string {
@@ -148,8 +142,8 @@ func readStrings(b *bufio.Reader) []string {
 	return out
 }
 
-func createConfigurationFle(content string) (tmpFile *os.File, err error) {
-	tmpFile, err = os.CreateTemp(os.TempDir(), "smtpd-proxy-*-test.yml")
+func createConfigurationFle(tmpdir, content string) (tmpFile *os.File, err error) {
+	tmpFile, err = os.CreateTemp(tmpdir, "smtpd-proxy-*-test.yml")
 	if err != nil {
 		log.Fatal("Cannot create temporary file", err)
 	}
