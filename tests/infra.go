@@ -64,9 +64,10 @@ func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn n
 	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", BindHost, port)
-
 	poll := time.NewTicker(20 * time.Millisecond)
 	defer poll.Stop()
+	timeout := time.NewTimer(5 * time.Second)
+	defer timeout.Stop()
 
 	select {
 	case <-poll.C:
@@ -74,7 +75,7 @@ func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn n
 		if conn != nil {
 			break
 		}
-	case <-time.After(5 * time.Second):
+	case <-timeout.C:
 		t.Fatal("SMTP open timeout")
 		break
 	}
