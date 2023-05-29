@@ -75,7 +75,6 @@ smtpd-proxy:
 
 func TestSmokeAnonCredentialsOk(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)

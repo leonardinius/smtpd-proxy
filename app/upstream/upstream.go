@@ -2,12 +2,13 @@ package upstream
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"math"
+	"math/big"
 	"sync"
-	"time"
 
 	"github.com/jordan-wright/email"
 	"github.com/leonardinius/smtpd-proxy/app/zlog"
@@ -81,21 +82,30 @@ type randInt interface {
 }
 
 type randIntStruc struct {
-	gorand *rand.Rand
 }
 
 var _ randInt = (*randIntStruc)(nil)
+var _maxInt = big.NewInt(math.MaxInt)
 
 func newRandIntStruc() *randIntStruc {
-	return &randIntStruc{rand.New(rand.NewSource(time.Now().UnixNano()))}
+	return &randIntStruc{}
 }
 
 func (s *randIntStruc) Intn(n int) int {
-	return s.gorand.Intn(n)
+	max := big.NewInt(int64(n))
+	val, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		panic(err) // out of randomness, should never happen
+	}
+	return int(val.Int64())
 }
 
 func (s *randIntStruc) Int() int {
-	return s.gorand.Int()
+	val, err := rand.Int(rand.Reader, _maxInt)
+	if err != nil {
+		panic(err) // out of randomness, should never happen
+	}
+	return int(val.Int64())
 }
 
 // NewEmptyRegistry creates empty new registry
