@@ -15,7 +15,7 @@ require (
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/stretchr/testify v1.8.3
 	github.com/testcontainers/testcontainers-go v0.20.1
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.24.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
