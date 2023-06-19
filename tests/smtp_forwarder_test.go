@@ -155,7 +155,7 @@ func convertToBase64Fragment(s string) string {
 
 func initFakeSMTPContainer(ctx context.Context) (container tc.Container, err error) {
 	localstackReq := tc.ContainerRequest{
-		Image:        "gessnerfl/fake-smtp-server",
+		Image:        "gessnerfl/fake-smtp-server:2.0.3",
 		ExposedPorts: []string{"8080/tcp", "8081/tcp", "8025/tcp"},
 		Env:          map[string]string{},
 		WaitingFor:   wait.ForListeningPort("8080/tcp"),
