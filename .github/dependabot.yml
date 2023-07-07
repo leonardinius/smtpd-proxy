@@ -20,3 +20,16 @@ updates:
       # Allow both direct and indirect updates for all packages
       - dependency-type: "all"  
     open-pull-requests-limit: 10
+    groups:
+      # Specify a name for the group, which will be used in pull request titles
+      # and branch names
+      aws-dependencies:
+         # Define patterns to include dependencies in the group (based on
+         # dependency name)
+         patterns:
+           - "*aws*" # A single dependency name
+         # # Define patterns to exclude dependencies from the group (based on
+         # # dependency name)
+         # exclude-patterns:
+         #   - "gc_ruboconfig"
+         #   - "gocardless-*"
