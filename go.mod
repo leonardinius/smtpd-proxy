@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.15.11
 	github.com/creasty/defaults v1.7.0
 	github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
-	github.com/emersion/go-smtp v0.16.0
+	github.com/emersion/go-smtp v0.17.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
