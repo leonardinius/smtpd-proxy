@@ -41,9 +41,6 @@ var _ SMTPServer = (*SrvBackend)(nil)
 
 func (srv *SrvBackend) Shutdown() error {
 	zlog.Infof("shutting down %s\n", srv.smtp.Addr)
-	srv.smtp.ForEachConn(func(c *smtp.Conn) {
-		zlog.Warnf("dropping SMTP connections -> %v", c.Close())
-	})
 	return srv.smtp.Close()
 }
 
@@ -62,7 +59,7 @@ func NewServer(ctx context.Context, addr, domain string) *SrvBackend {
 	s.Domain = domain
 	s.ReadTimeout = ReadTimeout
 	s.WriteTimeout = WriteTimeout
-	s.MaxMessageBytes = MaxMessageBytes
+	s.MaxMessageBytes = int64(MaxMessageBytes)
 	s.MaxRecipients = MaxRecipients
 	s.AllowInsecureAuth = AllowInsecureAuth
 	s.EnableSMTPUTF8 = EnableSMTPUTF8
