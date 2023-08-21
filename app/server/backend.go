@@ -68,7 +68,7 @@ func (s *session) Mail(from string, opts *smtp.MailOptions) error {
 }
 
 // Add recipient for currently processed message.
-func (s *session) Rcpt(to string) error {
+func (s *session) Rcpt(to string, opts *smtp.RcptOptions) error {
 	err := s.isAuthOk()
 	zlog.Debugf("Rcpt to: %s %v", to, err)
 	return err
