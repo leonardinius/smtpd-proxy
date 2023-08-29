@@ -18,7 +18,7 @@ updates:
       interval: "weekly"
     allow:
       # Allow both direct and indirect updates for all packages
-      - dependency-type: "all"  
+      - dependency-type: "direct"  
     open-pull-requests-limit: 10
     groups:
       # Specify a name for the group, which will be used in pull request titles
