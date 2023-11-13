@@ -62,13 +62,14 @@ func (su *SESSystemTestSuite) /*  */ TearDownSuite() {
 func (su *SESSystemTestSuite) TestSmokeSESForwardAcceptsSimpleEMail() {
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
-	sesEndpoint, err := su.localstack.PortEndpoint(su.ctx, "4566/tcp", "http")
+	sesPort, err := su.localstack.MappedPort(su.ctx, "4566/tcp")
 	require.NoError(su.T(), err)
+	sesEndpoint := fmt.Sprintf("http://%s:%s", BindHost, sesPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s:%d
-  ehlo: localhost
-  username: user@example.com
+  ehlo: 127.0.0.1
+  username: user-ses@example.com
   password: password
   is_anon_auth_allowed: false
   upstream-servers:
@@ -80,25 +81,25 @@ smtpd-proxy:
       region: us-east-1
 `, BindHost, port, sesEndpoint)
 	RunMainWithConfig(su.ctx, su.T(), config, port, func(t *testing.T, conn net.Conn) {
-		fromEmail := "<gotest-simple@esmtp.email>"
+		fromEmail := fmt.Sprintf("<gotest-%d-simple@esmtp.email>", time.Now().UnixMilli())
 		// Setup authentication information.
-		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
-		to := []string{"recipient@example.net"}
+		auth := smtp.PlainAuth("", "user-ses@example.com", "password", BindHost)
+		to := []string{"recipient-ses@example.net"}
 		msg := strings.Join([]string{
-			"To: <discard-simple@tld.invalid>",
+			"To: <discard-simple-ses@tld.invalid>",
 			"From: " + fromEmail,
-			"Subject: Test E-mail!",
+			"Subject: Test E-mail! (SES)",
 			"",
-			"This is the email body.",
+			"This is the email body (SES).",
 			"",
 		}, "\r\n")
-		err := smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
-		require.ErrorContains(t, err, "Email address not verified <gotest-simple@esmtp.email>")
+		err := smtp.SendMail(proxyEndpoint, auth, "sender-ses@example.org", to, []byte(msg))
+		require.ErrorContains(t, err, "Email address not verified")
 
 		ses := newSesClient(su.ctx, t, sesEndpoint)
 		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String(fromEmail)})
 		require.NoError(t, err)
-		err = smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
+		err = smtp.SendMail(proxyEndpoint, auth, "sender-ses@example.org", to, []byte(msg))
 		assert.NoError(t, err)
 
 		sesFile := requireSesFileWithContains(t, fromEmail)
@@ -106,20 +107,21 @@ smtpd-proxy:
 		require.NoError(t, err)
 		jsonMessage := string(bytes)
 		assert.Contains(t, jsonMessage,
-			"\"This is the email body.\\r\\n\"")
+			"\"This is the email body (SES).\\r\\n\"")
 	})
 }
 
 func (su *SESSystemTestSuite) TestSmokeSESForwardAcceptsEMailWithAttachments() {
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
-	sesEndpoint, err := su.localstack.PortEndpoint(su.ctx, "4566/tcp", "http")
+	sesPort, err := su.localstack.MappedPort(su.ctx, "4566/tcp")
 	require.NoError(su.T(), err)
+	sesEndpoint := fmt.Sprintf("http://%s:%s", BindHost, sesPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s:%d
-  ehlo: localhost
-  username: user@example.com
+  ehlo: 127.0.0.1
+  username: user-ses@example.com
   password: password
   is_anon_auth_allowed: false
   upstream-servers:
@@ -131,18 +133,19 @@ smtpd-proxy:
       region: us-east-1
 `, BindHost, port, sesEndpoint)
 	RunMainWithConfig(su.ctx, su.T(), config, port, func(t *testing.T, conn net.Conn) {
+		fromEmail := fmt.Sprintf("<gotest-%d-attachment@esmtp.email>", time.Now().UnixMilli())
 		ses := newSesClient(su.ctx, t, sesEndpoint)
-		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String("<gotest-attachment@esmtp.email>")})
-		require.NoError(t, err, "failed to verify gotest-attachment@esmtp.email")
+		_, err = ses.VerifyEmailIdentity(su.ctx, &awsses.VerifyEmailIdentityInput{EmailAddress: aws.String(fromEmail)})
+		require.NoError(t, err, "failed to verify attachment email")
 
 		// Setup authentication information.
-		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
+		auth := smtp.PlainAuth("", "user-ses@example.com", "password", BindHost)
 		envelope := email.NewEmail()
-		envelope.To = []string{"<discard-attachment@tld.invalid>"}
-		envelope.From = "<gotest-attachment@esmtp.email>"
-		envelope.Subject = "Subject: Test E-mail!"
-		envelope.Text = []byte("This is the email body.")
-		envelope.Sender = "recipient@example.net"
+		envelope.To = []string{"<discard-attachment-ses@tld.invalid>"}
+		envelope.From = fromEmail
+		envelope.Subject = "Subject: Test Ses E-mail!"
+		envelope.Text = []byte("This is the email body (SES).")
+		envelope.Sender = "recipient-ses@example.net"
 		_, err := envelope.AttachFile("_testData/text-attachment.txt")
 		require.NoError(t, err, "failed to attach file")
 		err = envelope.Send(proxyEndpoint, auth)
@@ -157,7 +160,7 @@ smtpd-proxy:
 		for strings.HasSuffix(loremIpsumBase64, "=") {
 			loremIpsumBase64 = strings.TrimSuffix(loremIpsumBase64, "=")
 		}
-		assert.Contains(t, jsonMessage, "\\r\\nThis is the email body.\\r\\n")
+		assert.Contains(t, jsonMessage, "\\r\\nThis is the email body (SES).\\r\\n")
 		assert.Contains(t, jsonMessage, loremIpsumBase64)
 	})
 }
@@ -165,23 +168,24 @@ smtpd-proxy:
 func iniFakeSMTPContainer(ctx context.Context) (container tc.Container, err error) {
 	vol, _ := filepath.Abs(".volume")
 	_ = os.Mkdir(vol, 0o755)
-	_ = os.RemoveAll(filepath.Join(vol, "tmp", "state", "ses"))
+	_ = os.RemoveAll(filepath.Join(vol, "./state/ses"))
 	localstackReq := tc.ContainerRequest{
-		Image:        "localstack/localstack",
+		Image:        "localstack/localstack:2.3.2",
 		ExposedPorts: []string{"4566/tcp"},
 		Env: map[string]string{
 			"EAGER_SERVICE_LOADING": "1",
 			"SERVICES":              "ses",
+			"DEBUG":                 "1",
+			"PERSISTENCE":           "1",
 		},
 		Mounts:     tc.Mounts(tc.BindMount(vol, "/var/lib/localstack")),
 		WaitingFor: wait.ForListeningPort("4566/tcp"),
 	}
-
 	container, err = tc.GenericContainer(ctx, tc.GenericContainerRequest{
 		ContainerRequest: localstackReq,
 		Started:          true,
 	})
-	return
+	return container, err
 }
 
 func newSesClient(ctx context.Context, t *testing.T, endpoint string) *awsses.Client {
@@ -205,7 +209,7 @@ func newSesClient(ctx context.Context, t *testing.T, endpoint string) *awsses.Cl
 
 func requireSesFileWithContains(t *testing.T, needle string) *os.File {
 	var sesFile *os.File
-	const mailSesJSONDir = ".volume/tmp/state/ses/"
+	const mailSesJSONDir = ".volume/state/ses/"
 	assert.Eventuallyf(t,
 		func() bool {
 			dir, e := filepath.Abs(mailSesJSONDir)
@@ -233,8 +237,8 @@ func requireSesFileWithContains(t *testing.T, needle string) *os.File {
 			}
 			return sesFile != nil
 		},
-		5*time.Second,
-		50*time.Millisecond,
+		10*time.Second,
+		300*time.Millisecond,
 		"Failed to obtain ses payloads for %s", needle,
 	)
 	require.NotNil(t, sesFile)

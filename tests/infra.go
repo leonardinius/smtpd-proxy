@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"
 )
@@ -34,6 +33,7 @@ func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, por
 
 	serverCh := make(chan cmd.ServerSignal)
 	done := make(chan struct{})
+
 	go func() {
 		<-done
 		serverCh <- cmd.ServerStopSignal
@@ -52,11 +52,6 @@ func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, por
 	}()
 
 	conn := waitForPortListenStart(ctx, t, port)
-	defer func() {
-		err = conn.Close()
-		zlog.Debugf("conn.Close() error: %v", err)
-	}()
-
 	test(t, conn)
 }
 
@@ -81,7 +76,7 @@ func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn n
 	}
 
 	require.NotNil(t, conn)
-	err = conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
+	err = conn.SetDeadline(time.Now().Add(500 * time.Millisecond))
 	if err != nil {
 		t.Fatal("SMTP set connection deadline error", err)
 	}

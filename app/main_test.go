@@ -25,7 +25,7 @@ func Test_Main(t *testing.T) {
 	yamlConfig := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s:%d
-  ehlo: localhost
+  ehlo: 127.0.0.1
   username: user
   password: secret
   is_anon_auth_allowed: true
@@ -47,7 +47,7 @@ smtpd-proxy:
 	done := make(chan struct{})
 	go func() {
 		<-done
-		serverCh <- cmd.ServerStopSignal
+				serverCh <- cmd.ServerStopSignal
 	}()
 
 	finished := make(chan struct{})
@@ -73,7 +73,7 @@ smtpd-proxy:
 
 		response := readStrings(bufReader)
 		for _, s := range [...]string{
-			"220 localhost ESMTP Service Ready",
+			"220 127.0.0.1 ESMTP Service Ready",
 			"250-Hello test",
 			"250-PIPELINING",
 			"250-8BITMIME",
@@ -97,10 +97,10 @@ smtpd-proxy:
 }
 
 func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn net.Conn) {
-	var d net.Dialer
+		var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)
-	poll := time.NewTicker(20 * time.Millisecond)
+	poll := time.NewTicker(50 * time.Millisecond)
 	defer poll.Stop()
 	timeout := time.NewTimer(5 * time.Second)
 	defer timeout.Stop()

@@ -13,7 +13,7 @@ func TestSmokeLoadConfigShouldBeOk(t *testing.T) {
 	data := `
 smtpd-proxy:
   listen: 127.0.0.1:1025
-  ehlo: localhost
+  ehlo: 127.0.0.1
   username: user
   password: secret
   server-cert: server.crt
@@ -41,7 +41,7 @@ smtpd-proxy:
 
 	srv := c.ServerConfig
 	assert.Equal(t, "127.0.0.1:1025", srv.Listen)
-	assert.Equal(t, "localhost", srv.Ehlo)
+	assert.Equal(t, "127.0.0.1", srv.Ehlo)
 	assert.Equal(t, "user", srv.Username)
 	assert.Equal(t, "secret", srv.Password)
 	assert.Equal(t, "server.crt", srv.ServerCertificatePath)
