@@ -168,7 +168,7 @@ smtpd-proxy:
 func iniFakeSMTPContainer(ctx context.Context) (container tc.Container, err error) {
 	vol, _ := filepath.Abs(".volume")
 	_ = os.Mkdir(vol, 0o755)
-	_ = os.RemoveAll(filepath.Join(vol, "./state/ses"))
+	_ = os.RemoveAll(vol + "/state/ses")
 	localstackReq := tc.ContainerRequest{
 		Image:        "localstack/localstack:2.3.2",
 		ExposedPorts: []string{"4566/tcp"},

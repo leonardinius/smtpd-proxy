@@ -47,7 +47,7 @@ smtpd-proxy:
 	done := make(chan struct{})
 	go func() {
 		<-done
-				serverCh <- cmd.ServerStopSignal
+		serverCh <- cmd.ServerStopSignal
 	}()
 
 	finished := make(chan struct{})
@@ -97,7 +97,7 @@ smtpd-proxy:
 }
 
 func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn net.Conn) {
-		var d net.Dialer
+	var d net.Dialer
 	var err error
 	addr := fmt.Sprintf("%s:%d", bindHost, port)
 	poll := time.NewTicker(50 * time.Millisecond)
