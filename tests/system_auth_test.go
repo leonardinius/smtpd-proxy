@@ -32,7 +32,7 @@ func TestSmokeAuthCredentials(t *testing.T) {
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s
-  ehlo: localhost
+  ehlo: 127.0.0.1
   username: user@example.com
   password: password
   is_anon_auth_allowed: false
@@ -81,7 +81,7 @@ func TestSmokeAnonCredentialsOk(t *testing.T) {
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s
-  ehlo: localhost
+  ehlo: 127.0.0.1
   is_anon_auth_allowed: true
   upstream-servers:
   - type: log

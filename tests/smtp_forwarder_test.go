@@ -58,18 +58,18 @@ func (su *SMTPSystemTestSuite) TearDownSuite() {
 func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardSimpleEmail() {
 	port := DynamicPort()
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
-	smtpHost, err := su.smtpd.Host(su.ctx)
+	smtpHost := BindHost
+	smtpPortProto, err := su.smtpd.MappedPort(su.ctx, "8025/tcp")
 	require.NoError(su.T(), err)
-	_smtpPort, err := su.smtpd.MappedPort(su.ctx, "8025/tcp")
+	smtpPort := strings.SplitN(string(smtpPortProto), "/", 2)[0]
+	apiPort, err := su.smtpd.MappedPort(su.ctx, "8080/tcp")
 	require.NoError(su.T(), err)
-	smtpPort := strings.SplitN(string(_smtpPort), "/", 2)[0]
-	apiEndpoint, err := su.smtpd.PortEndpoint(su.ctx, "8080/tcp", "http")
-	require.NoError(su.T(), err)
+	apiEndpoint := fmt.Sprintf("http://%s:%s", BindHost, apiPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s
-  ehlo: localhost
-  username: user@example.com
+  ehlo: 127.0.0.1
+  username: user-smtp@example.com
   password: password
   is_anon_auth_allowed: false
   upstream-servers:
@@ -82,17 +82,18 @@ smtpd-proxy:
 	RunMainWithConfig(su.ctx, su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		fromEmail := "<gotest-simple-smtp@esmtp.email>"
 		// Setup authentication information.
-		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
-		to := []string{"recipient@example.net"}
+		auth := smtp.PlainAuth("", "user-smtp@example.com", "password", BindHost)
+		to := []string{"recipient-smtp@example.net"}
 		msg := strings.Join([]string{
 			"To: <discard-simple-smtp@tld.invalid>",
 			"From: " + fromEmail,
-			"Subject: Test E-mail!",
+			"Subject: Test E-mail! )SMTP)",
 			"",
 			"This is the email body (SMTP).",
 			"",
 		}, "\r\n")
-		err := smtp.SendMail(proxyEndpoint, auth, "sender@example.org", to, []byte(msg))
+		// FakeSMTPServer is not very stable so it seems to be a good idea to retry
+		err := smtp.SendMail(proxyEndpoint, auth, "sender-smtp@example.org", to, []byte(msg))
 		require.NoError(t, err)
 
 		smtpFakerReceived := requireFakerReceivedEmailWithContains(t, apiEndpoint, "gotest-simple-smtp@esmtp.email")
@@ -109,13 +110,14 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardAcceptsEMailWithAttachments()
 	_smtpPort, err := su.smtpd.MappedPort(su.ctx, "8025/tcp")
 	require.NoError(su.T(), err)
 	smtpPort := strings.SplitN(string(_smtpPort), "/", 2)[0]
-	apiEndpoint, err := su.smtpd.PortEndpoint(su.ctx, "8080/tcp", "http")
+	apiPort, err := su.smtpd.MappedPort(su.ctx, "8080/tcp")
 	require.NoError(su.T(), err)
+	apiEndpoint := fmt.Sprintf("http://%s:%s", BindHost, apiPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s
-  ehlo: localhost
-  username: user@example.com
+  ehlo: 127.0.0.1
+  username: user-smtp@example.com
   password: password
   is_anon_auth_allowed: false
   upstream-servers:
@@ -127,16 +129,23 @@ smtpd-proxy:
 `, proxyEndpoint, smtpHost, smtpPort, smtpHost)
 	RunMainWithConfig(su.ctx, su.T(), config, port, func(t *testing.T, conn net.Conn) {
 		// Setup authentication information.
-		auth := smtp.PlainAuth("", "user@example.com", "password", BindHost)
+		auth := smtp.PlainAuth("", "user-smtp@example.com", "password", BindHost)
 		envelope := email.NewEmail()
-		envelope.To = []string{"<discard-attachment@tld.invalid>"}
-		envelope.From = "<gotest-attachment@esmtp.email>"
-		envelope.Subject = "Subject: Test E-mail!"
+		envelope.To = []string{"<discard-attachment-smtp@tld.invalid>"}
+		envelope.From = "<gotest-attachment-smtp@esmtp.email>"
+		envelope.Subject = "Subject: Test SMTP E-mail!"
 		envelope.Text = []byte("This is the email body (SMTP).")
-		envelope.Sender = "recipient@example.net"
+		envelope.Sender = "recipient-smtp@example.net"
 		_, err := envelope.AttachFile("_testData/text-attachment.txt")
 		require.NoError(t, err, "failed to attach file")
-		err = envelope.Send(proxyEndpoint, auth)
+		// FakeSMTPServer is not very stable so it seems to be a good idea to retry
+		for i := 0; i < 3; i++ {
+			err = envelope.Send(proxyEndpoint, auth)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * time.Duration((50 + i*25)))
+		}
 		require.NoError(t, err, "failed to send message")
 
 		fakerEmailReceived := requireFakerReceivedEmailWithContains(t, apiEndpoint, envelope.From)
@@ -169,18 +178,19 @@ func initFakeSMTPContainer(ctx context.Context) (container tc.Container, err err
 }
 
 type fakerAPIContentItem struct {
-	ID          int       `json:"id"`
-	FromAddress string    `json:"fromAddress"`
-	ToAddress   string    `json:"toAddress"`
-	Subject     string    `json:"subject"`
-	ReceivedOn  time.Time `json:"receivedOn"`
-	RawData     string    `json:"rawData"`
+	ID          int    `json:"id"`
+	FromAddress string `json:"fromAddress"`
+	ToAddress   string `json:"toAddress"`
+	Subject     string `json:"subject"`
+	ReceivedOn  string `json:"receivedOn"`
+	RawData     string `json:"rawData"`
 	Attachments []struct {
 		ID       int    `json:"id"`
 		Filename string `json:"filename"`
 		Data     string `json:"data"`
 	} `json:"attachments"`
 }
+
 type fakerAPIEmail struct {
 	Content []fakerAPIContentItem `json:"content"`
 	Page    struct {
@@ -226,8 +236,8 @@ func requireFakerReceivedEmailWithContains(t *testing.T, fakerAPIBaseURL, needle
 			}
 			return forwardedEmail != nil
 		},
-		5*time.Second,
-		50*time.Millisecond,
+		10*time.Second,
+		300*time.Millisecond,
 		"Failed to obtain ses payloads for %s", needle,
 	)
 	require.NotNil(t, forwardedEmail)
