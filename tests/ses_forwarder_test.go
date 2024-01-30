@@ -18,6 +18,8 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	awscreds "github.com/aws/aws-sdk-go-v2/credentials"
 	awsses "github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/jordan-wright/email"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,7 +47,7 @@ func TestSESSystemTestSuite(t *testing.T) {
 func (su *SESSystemTestSuite) SetupSuite() {
 	var err error
 	su.ctx = context.Background()
-	su.localstack, err = iniFakeSMTPContainer(su.ctx)
+	su.localstack, err = iniFakeSesSMTPContainer(su.ctx)
 	if err != nil {
 		su.T().Fatalf("Errors: %v ", err)
 	}
@@ -165,7 +167,7 @@ smtpd-proxy:
 	})
 }
 
-func iniFakeSMTPContainer(ctx context.Context) (container tc.Container, err error) {
+func iniFakeSesSMTPContainer(ctx context.Context) (tc.Container, error) {
 	vol, _ := filepath.Abs(".volume")
 	_ = os.Mkdir(vol, 0o755)
 	_ = os.RemoveAll(vol + "/state/ses")
@@ -178,14 +180,23 @@ func iniFakeSMTPContainer(ctx context.Context) (container tc.Container, err erro
 			"DEBUG":                 "1",
 			"PERSISTENCE":           "1",
 		},
-		Mounts:     tc.Mounts(tc.BindMount(vol, "/var/lib/localstack")),
+		HostConfigModifier: func(hc *container.HostConfig) {
+			hc.AutoRemove = true
+			hc.Mounts = []mount.Mount{
+				{
+					Source: vol,
+					Target: "/var/lib/localstack",
+					Type:   mount.TypeBind,
+				},
+			}
+		},
 		WaitingFor: wait.ForListeningPort("4566/tcp"),
 	}
-	container, err = tc.GenericContainer(ctx, tc.GenericContainerRequest{
+	instance, err := tc.GenericContainer(ctx, tc.GenericContainerRequest{
 		ContainerRequest: localstackReq,
 		Started:          true,
 	})
-	return container, err
+	return instance, err
 }
 
 func newSesClient(ctx context.Context, t *testing.T, endpoint string) *awsses.Client {
