@@ -1,4 +1,4 @@
-name: Add GH Release notes
+name: release-flow
 
 on:
   push:
