@@ -62,10 +62,10 @@ ci-test: $(GOFILES)
 lint: $(GOFILES)
 	-cd ${BUILDDIR}; \
 	mkdir -p ${BUILDOUT}; \
-    if ! hash ${GOPATH}/golangci-lint 2>/dev/null; then \
+    if ! hash ${GOPATH}/bin/golangci-lint 2>/dev/null; then \
 	  curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH} ; \
 	fi; \
-	${GOPATH}/golangci-lint run --config .golangci.yml --out-format=junit-xml ./... 2>&1 | tee ${BUILDOUT}/${LINT_REPORT};
+	${GOPATH}/bin/golangci-lint run --config .golangci.yml --out-format=junit-xml ./... 2>&1 | tee ${BUILDOUT}/${LINT_REPORT};
 
 fmt: $(GOFILES)
 	cd ${BUILDDIR}; \
