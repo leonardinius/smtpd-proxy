@@ -3,9 +3,9 @@ package forwarder
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
 type logUpstreamSettings struct {
@@ -44,15 +44,15 @@ func (u *logServer) Forward(ctx context.Context, mail *upstream.Email) error {
 	}
 	text := string(([]rune(string(mail.Text)))[:20]) + "..."
 
-	zlog.Infow("log-forwarder",
+	slog.InfoContext(ctx, "log-forwarder",
 		"uid", uid,
-		"From", mail.From,
-		"To", mail.To,
-		"ReplyTo", mail.ReplyTo,
-		"Cc", mail.Cc,
-		"Bcc", mail.Bcc,
-		"Subject", mail.Subject,
-		"Excerpt", text,
+		"from", mail.From,
+		"to", mail.To,
+		"replyTo", mail.ReplyTo,
+		"cc", mail.Cc,
+		"bcc", mail.Bcc,
+		"subject", mail.Subject,
+		"excerpt", text,
 	)
 
 	return nil

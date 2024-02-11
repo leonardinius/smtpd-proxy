@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 	"github.com/leonardinius/smtpd-proxy/app/server"
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 	"github.com/leonardinius/smtpd-proxy/app/upstream/forwarder"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
 var (
@@ -48,19 +48,21 @@ func Main(ctx context.Context, args ...string) error {
 		}
 	}
 
-	zlog.SetNewZapLogger(opts.Verbose)
-	defer zlog.Sync()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
 	fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 	opts.ConfigYamlFile = filepath.Clean(opts.ConfigYamlFile)
-	zlog.Infof("parsing yaml at path: %s", opts.ConfigYamlFile)
+	slog.InfoContext(ctx, "parsing yaml", "path", opts.ConfigYamlFile)
 	cfg, err := config.ParseFile(opts.ConfigYamlFile)
 	if err != nil {
-		zlog.Fatalf("failed to parse configuration %s: %v", opts.ConfigYamlFile, err)
+		slog.ErrorContext(ctx, "failed to parse configuration", "path", opts.ConfigYamlFile, "err", err)
+		return err
 	}
 	cfg, err = cfg.LoadDefaults()
 	if err != nil {
-		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
+		slog.ErrorContext(ctx, "failed to load configuration", "path", opts.ConfigYamlFile, "err", err)
+		return err
 	}
 
 	return ListenProxyAndServe(ctx, cfg)
@@ -69,6 +71,7 @@ func Main(ctx context.Context, args ...string) error {
 // ListenProxyAndServe run proxy cmd
 func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 	srvConfig := c.ServerConfig
+	logger := slog.Default().With("server", srvConfig.Listen, "ehlo", srvConfig.Ehlo)
 	tlsConfig, err := loadTLSConfig(srvConfig.ServerCertificatePath, srvConfig.ServerKeyPath)
 	if err != nil {
 		return err
@@ -98,19 +101,19 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 
 	go func() {
 		if x := recover(); x != nil {
-			zlog.Warnf("run time panic:\n%v", x)
+			logger.WarnContext(ctx, "run time panic", "panic", x)
 			panic(x)
 		}
 
-		zlog.Infof("starting server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
+		logger.InfoContext(ctx, "starting server")
 		errCh <- srv.ListenAndServe()
 	}()
 
 	select {
 	case <-ctx.Done():
-		zlog.Infof("shutting down %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
+		logger.InfoContext(ctx, "shutting down")
 		if err := srv.Shutdown(); err != nil {
-			zlog.Errorf("failed to shutdown server: %v", err)
+			logger.ErrorContext(ctx, "failed to shutdown server", "err", err)
 			return err
 		}
 		return nil

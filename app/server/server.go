@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/emersion/go-sasl"
@@ -51,7 +52,8 @@ func (srv *SrvBackend) ListenAndServe() error {
 
 // NewServer prepares SMTP server
 func NewServer(ctx context.Context, addr, domain string) *SrvBackend {
-	bkd := newBackend(ctx, NoOpAuthFunc())
+	logger := slog.Default().With("server", addr, "ehlo", domain)
+	bkd := newBackend(ctx, logger, NoOpAuthFunc())
 	s := smtp.NewServer(bkd)
 	s.Addr = addr
 	s.Domain = domain

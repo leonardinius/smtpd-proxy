@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func init() {
 	sigChan := make(chan os.Signal, 1)
 	go func() {
 		for range sigChan {
-			zlog.Infof("SIGQUIT detected, dump:\n%s", getDump())
+			slog.Info("SIGQUIT detected", "dump", getDump())
 		}
 	}()
 	signal.Notify(sigChan, syscall.SIGQUIT)

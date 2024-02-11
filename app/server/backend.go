@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"io"
-	"strconv"
+	"log/slog"
 
 	"github.com/emersion/go-smtp"
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
 // ErrorAuthCredentials error for invalid authentication
@@ -19,6 +18,7 @@ var ErrorAuthAnonCredentials = errors.New("user has not authenticated. anonymous
 
 // The backend implements SMTP server methods.
 type backend struct {
+	logger        *slog.Logger
 	authLoginFunc AuthFunc
 	isAnonAllowed bool
 	forwarder     upstream.Registry
@@ -32,8 +32,8 @@ type session struct {
 }
 
 // NewBackend Creates new backend
-func newBackend(ctx context.Context, authLoginFunc AuthFunc) *backend {
-	return &backend{authLoginFunc: authLoginFunc, ctx: ctx}
+func newBackend(ctx context.Context, logger *slog.Logger, authLoginFunc AuthFunc) *backend {
+	return &backend{logger: logger, authLoginFunc: authLoginFunc, ctx: ctx}
 }
 
 var _ smtp.Backend = (*backend)(nil)
@@ -56,21 +56,21 @@ func (s *session) isAuthOk() error {
 func (s *session) AuthPlain(username, password string) error {
 	err := s.bkd.authLoginFunc.Authenticate(username, password)
 	s.authorized = err == nil
-	zlog.Debugf("auth plain: %s %s", username, strconv.FormatBool(s.authorized))
+	s.bkd.logger.DebugContext(s.bkd.ctx, "auth plain", "username", username, "authorized", s.authorized)
 	return err
 }
 
 // Set return path for currently processed message.
 func (s *session) Mail(from string, opts *smtp.MailOptions) error {
 	err := s.isAuthOk()
-	zlog.Debugf("mail from: %s %v", from, err)
+	s.bkd.logger.DebugContext(s.bkd.ctx, "mail", "from", from, "err", err)
 	return err
 }
 
 // Add recipient for currently processed message.
 func (s *session) Rcpt(to string, opts *smtp.RcptOptions) error {
 	err := s.isAuthOk()
-	zlog.Debugf("rcpt to: %s %v", to, err)
+	s.bkd.logger.DebugContext(s.bkd.ctx, "rcpt", "to", to, "err", err)
 	return err
 }
 
@@ -81,10 +81,11 @@ func (s *session) Data(r io.Reader) (err error) {
 	}
 
 	var envelope *upstream.Email
-	zlog.Debug("data")
 	if envelope, err = upstream.NewEmailFromReader(r); err != nil {
-		zlog.Error("data err", err)
+		s.bkd.logger.ErrorContext(s.bkd.ctx, "data", "err", err)
 		return err
+	} else {
+		s.bkd.logger.DebugContext(s.bkd.ctx, "data", "err", nil)
 	}
 
 	return s.bkd.forwarder.Forward(s.bkd.ctx, envelope)
@@ -92,12 +93,12 @@ func (s *session) Data(r io.Reader) (err error) {
 
 // Discard currently processed message.
 func (s *session) Reset() {
-	zlog.Debug("reset")
+	s.bkd.logger.DebugContext(s.bkd.ctx, "reset")
 }
 
 // Free all resources associated with session.
 func (s *session) Logout() error {
-	zlog.Debug("logout")
+	s.bkd.logger.DebugContext(s.bkd.ctx, "logout")
 	s.authorized = false
 	return nil
 }

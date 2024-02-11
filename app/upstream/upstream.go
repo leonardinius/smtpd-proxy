@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math"
 	"math/big"
 	"sync"
 
 	"github.com/jordan-wright/email"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
 var errorEmptyRegistry = errors.New("empty sender registry")
@@ -159,7 +159,7 @@ func (r *RegistryMap) Forward(ctx context.Context, mail *Email) error {
 	uid := entry.meta.UID
 	err = sender.Forward(context.WithValue(ctx, entryContextKey, &entry.meta), mail)
 	if err != nil {
-		zlog.Warnf("%v err [%v]", uid, err)
+		slog.WarnContext(ctx, "forward error", "uid", uid, "err", err)
 	}
 	return err
 }
