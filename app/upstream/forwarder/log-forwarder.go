@@ -49,7 +49,7 @@ func (u *logServer) Forward(ctx context.Context, mail *upstream.Email) error {
 		"uid", uid,
 		"from", mail.From,
 		"to", mail.To,
-		"replyTo", mail.ReplyTo,
+		"reply_to", mail.ReplyTo,
 		"cc", mail.Cc,
 		"bcc", mail.Bcc,
 		"subject", mail.Subject,

@@ -26,7 +26,15 @@ linters-settings:
     ignore-generated-header: true
     severity: warning
     enable-all-rules: false
-
+  sloglint:
+      no-mixed-args: true
+      kv-only: true
+      context-only: true
+      static-msg: true
+      # Enforce a single key naming convention.
+      # Values: snake, kebab, camel, pascal
+      # Default: ""
+      key-naming-case: snake
 linters:
   enable:
     - bodyclose
@@ -50,6 +58,7 @@ linters:
     - gosimple
     - prealloc
     - unused
+    - sloglint
   disable:
     - errcheck
     - structcheck #abandoned (1.49.0) replaced by unused

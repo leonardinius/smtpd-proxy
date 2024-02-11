@@ -40,7 +40,7 @@ func init() {
 	sigChan := make(chan os.Signal, 1)
 	go func() {
 		for range sigChan {
-			slog.Info("SIGQUIT detected", "dump", getDump())
+			slog.Info("SIGQUIT detected", "dump", getDump()) // nolint:sloglint // no context is ok here
 		}
 	}()
 	signal.Notify(sigChan, syscall.SIGQUIT)
