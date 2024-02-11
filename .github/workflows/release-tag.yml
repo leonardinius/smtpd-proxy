@@ -3,7 +3,7 @@ name: release-flow
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*"
 
 jobs:
   build-docker-image:
