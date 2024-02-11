@@ -51,7 +51,7 @@ windows: $(GOFILES)
 
 test: $(GOFILES)
 	cd ${BUILDDIR}; \
-	go test -shuffle=on -race -timeout=120s -count 1 -parallel 8 -v ./... 2>&1
+	go test -shuffle=on -race -timeout=120s -count 1 -parallel 8 -v ./... 2>&1 | grep -v '\?'
 
 ci-test: $(GOFILES)
 	-cd ${BUILDDIR}; \

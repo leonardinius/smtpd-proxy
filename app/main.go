@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -11,16 +13,14 @@ import (
 )
 
 func main() {
-	stopChannel := make(chan cmd.ServerSignal, 1)
-	go func() {
-		// catch signal and invoke graceful termination
-		stop := make(chan os.Signal, 1)
-		signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-		<-stop
-		zlog.Warn("interrupt signal")
-		stopChannel <- cmd.ServerStopSignal
-	}()
-	cmd.Main(stopChannel, os.Args[1:]...)
+	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	if err := cmd.Main(ctx, os.Args[1:]...); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 }
 
 // getDump reads runtime stack and returns as a string

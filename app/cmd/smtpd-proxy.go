@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"errors"
 
@@ -25,25 +24,7 @@ var (
 	COMMIT = "gitsha1"
 	// BRANCH git branch
 	BRANCH = "dirty"
-
-	ServerStopSignal = ServerSignal(0)
-	signals          = [...]string{
-		0: "ServerSignal[STOP]",
-	}
 )
-
-type ServerSignal int
-
-func (s ServerSignal) String() string {
-	if 0 <= s && int(s) < len(signals) {
-		str := signals[s]
-		if str != "" {
-			return str
-		}
-	}
-
-	return "ServerSignal[" + strconv.Itoa(int(s)) + "]"
-}
 
 // Opts with all cli commands and flags
 type Opts struct {
@@ -54,7 +35,7 @@ type Opts struct {
 var errorEmptyRegistry = errors.New("empty sender registry")
 
 // Main function
-func Main(ch <-chan ServerSignal, args ...string) {
+func Main(ctx context.Context, args ...string) error {
 	var opts Opts
 	p := flags.NewParser(&opts, flags.Default)
 
@@ -67,7 +48,6 @@ func Main(ch <-chan ServerSignal, args ...string) {
 		}
 	}
 
-	ctx := context.Background()
 	zlog.SetNewZapLogger(opts.Verbose)
 	defer zlog.Sync()
 
@@ -83,14 +63,11 @@ func Main(ch <-chan ServerSignal, args ...string) {
 		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
 	}
 
-	err = ListenProxyAndServe(ctx, cfg, ch)
-	if err != nil {
-		zlog.Fatalf("%s: %v", opts.ConfigYamlFile, err)
-	}
+	return ListenProxyAndServe(ctx, cfg)
 }
 
 // ListenProxyAndServe run proxy cmd
-func ListenProxyAndServe(ctx context.Context, c *config.Config, ch <-chan ServerSignal) error {
+func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 	srvConfig := c.ServerConfig
 	tlsConfig, err := loadTLSConfig(srvConfig.ServerCertificatePath, srvConfig.ServerKeyPath)
 	if err != nil {
@@ -117,21 +94,29 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config, ch <-chan Server
 		server.WithUpstreamServers(upstreamServers),
 	)
 
-	go func() {
-		defer srv.Shutdown()
+	errCh := make(chan error, 1)
 
+	go func() {
 		if x := recover(); x != nil {
 			zlog.Warnf("run time panic:\n%v", x)
 			panic(x)
 		}
 
-		signal := <-ch
-		zlog.Debugf("Received signal: %s", signal)
-		zlog.Infof("Shutdown server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
+		zlog.Infof("Starting server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
+		errCh <- srv.ListenAndServe()
 	}()
 
-	zlog.Infof("Starting server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
-	return srv.ListenAndServe()
+	select {
+	case <-ctx.Done():
+		zlog.Infof("shutting down %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
+		if err := srv.Shutdown(); err != nil {
+			zlog.Errorf("Failed to shutdown server: %v", err)
+			return err
+		}
+		return nil
+	case err := <-errCh:
+		return err
+	}
 }
 
 func loadTLSConfig(serverCertificatePath, serverKeyPath string) (*tls.Config, error) {

@@ -46,7 +46,10 @@ func TestSESSystemTestSuite(t *testing.T) {
 
 func (su *SESSystemTestSuite) SetupSuite() {
 	var err error
-	su.ctx = context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	su.T().Cleanup(cancel)
+	su.ctx = ctx
+
 	su.localstack, err = iniFakeSesSMTPContainer(su.ctx)
 	if err != nil {
 		su.T().Fatalf("Errors: %v ", err)

@@ -6,7 +6,6 @@ import (
 
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
-	"github.com/leonardinius/smtpd-proxy/app/zlog"
 )
 
 var (
@@ -40,7 +39,6 @@ type SrvBackend struct {
 var _ SMTPServer = (*SrvBackend)(nil)
 
 func (srv *SrvBackend) Shutdown() error {
-	zlog.Infof("shutting down %s\n", srv.smtp.Addr)
 	return srv.smtp.Close()
 }
 

@@ -40,7 +40,9 @@ func TestSMTPSystemTestSuite(t *testing.T) {
 
 func (su *SMTPSystemTestSuite) SetupSuite() {
 	var err error
-	su.ctx = context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	su.T().Cleanup(cancel)
+	su.ctx = ctx
 	su.smtpd, err = initFakeSMTPContainer(su.ctx)
 	if err != nil {
 		su.T().Fatalf("Errors: %v ", err)

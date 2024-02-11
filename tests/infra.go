@@ -23,6 +23,9 @@ const BindHost = "127.0.0.1"
 func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
 	t.Helper()
 
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	var (
 		cfg *os.File
 		err error
@@ -31,24 +34,9 @@ func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, por
 		t.Fatal("Failed to create temporary comfiguration file", err)
 	}
 
-	serverCh := make(chan cmd.ServerSignal)
-	done := make(chan struct{})
-
 	go func() {
-		<-done
-		serverCh <- cmd.ServerStopSignal
-	}()
-
-	finished := make(chan struct{})
-	go func() {
-		cmd.Main(serverCh, "--verbose", "-c", cfg.Name())
-		close(finished)
-	}()
-
-	// defer cleanup because require check below can fail
-	defer func() {
-		close(done)
-		<-finished
+		_ = cmd.Main(ctx, "--verbose", "-c", cfg.Name())
+		cancel()
 	}()
 
 	conn := waitForPortListenStart(ctx, t, port)

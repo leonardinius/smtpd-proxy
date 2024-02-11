@@ -21,6 +21,9 @@ func Test_Main(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	t.Cleanup(cancel)
+
 	port := dynamicPort()
 	yamlConfig := fmt.Sprintf(`
 smtpd-proxy:
@@ -43,23 +46,9 @@ smtpd-proxy:
 		t.Fatal("Failed to create temporary comfiguration file", err)
 	}
 
-	serverCh := make(chan cmd.ServerSignal)
-	done := make(chan struct{})
 	go func() {
-		<-done
-		serverCh <- cmd.ServerStopSignal
-	}()
-
-	finished := make(chan struct{})
-	go func() {
-		cmd.Main(serverCh, "-c", cfg.Name())
-		close(finished)
-	}()
-
-	// defer cleanup because require check below can fail
-	defer func() {
-		close(done)
-		<-finished
+		_ = cmd.Main(ctx, "-c", cfg.Name())
+		cancel()
 	}()
 
 	{
