@@ -3,6 +3,7 @@ package forwarder
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	gohttp "net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,14 +29,15 @@ type sesUpstreamSettings struct {
 type sesUpstream struct {
 	settings sesUpstreamSettings
 	ses      *ses.Client
+	logger   *slog.Logger
 }
 
 var _ upstream.Server = (*sesUpstream)(nil)
 var _ upstream.Forwarder = (*sesUpstream)(nil)
 
 // NewSESServer new ses upstream
-func NewSESServer() upstream.Server {
-	return new(sesUpstream)
+func NewSESServer(logger *slog.Logger) upstream.Server {
+	return &sesUpstream{logger: logger}
 }
 
 func (u *sesUpstream) Configure(ctx context.Context, settings map[string]any) (upstream.Forwarder, error) {

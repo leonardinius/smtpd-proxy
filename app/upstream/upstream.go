@@ -72,6 +72,7 @@ type RegistryMap struct {
 	entriesSorted []registryEntry
 	totalWeight   int
 	rnd           randInt
+	logger        *slog.Logger
 }
 
 // randInt interface for random values.
@@ -109,10 +110,11 @@ func (s *randIntStruc) Int() int {
 }
 
 // NewEmptyRegistry creates empty new registry
-func NewEmptyRegistry() *RegistryMap {
-	r := new(RegistryMap)
-	r.rnd = newRandIntStruc()
-	return r
+func NewEmptyRegistry(logger *slog.Logger) *RegistryMap {
+	return &RegistryMap{
+		rnd:    newRandIntStruc(),
+		logger: logger,
+	}
 }
 
 func (r *RegistryMap) AddForwarder(forwarder Forwarder, weight int) {
@@ -159,7 +161,7 @@ func (r *RegistryMap) Forward(ctx context.Context, mail *Email) error {
 	uid := entry.meta.UID
 	err = sender.Forward(context.WithValue(ctx, entryContextKey, &entry.meta), mail)
 	if err != nil {
-		slog.WarnContext(ctx, "forward error", "uid", uid, "err", err)
+		r.logger.WarnContext(ctx, "forward error", "uid", uid, "err", err)
 	}
 	return err
 }

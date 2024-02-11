@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/smtp"
 
@@ -22,14 +23,15 @@ type smtpUpstreamSettings struct {
 type smptUpstream struct {
 	settings smtpUpstreamSettings
 	auth     smtp.Auth
+	logger   *slog.Logger
 }
 
 var _ upstream.Server = (*smptUpstream)(nil)
 var _ upstream.Forwarder = (*smptUpstream)(nil)
 
 // NewSMTPServer new smtp upstream
-func NewSMTPServer() upstream.Server {
-	return new(smptUpstream)
+func NewSMTPServer(logger *slog.Logger) upstream.Server {
+	return &smptUpstream{logger: logger}
 }
 
 func (u *smptUpstream) Configure(ctx context.Context, settings map[string]any) (upstream.Forwarder, error) {

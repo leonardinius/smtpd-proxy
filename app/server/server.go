@@ -51,8 +51,7 @@ func (srv *SrvBackend) ListenAndServe() error {
 }
 
 // NewServer prepares SMTP server
-func NewServer(ctx context.Context, addr, domain string) *SrvBackend {
-	logger := slog.Default().With("server", addr, "ehlo", domain)
+func NewServer(ctx context.Context, logger *slog.Logger, addr, domain string) *SrvBackend {
 	bkd := newBackend(ctx, logger, NoOpAuthFunc())
 	s := smtp.NewServer(bkd)
 	s.Addr = addr

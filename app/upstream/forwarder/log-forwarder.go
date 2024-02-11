@@ -13,14 +13,15 @@ type logUpstreamSettings struct {
 
 type logServer struct {
 	settings logUpstreamSettings
+	logger   *slog.Logger
 }
 
 var _ upstream.Server = (*logServer)(nil)
 var _ upstream.Forwarder = (*logServer)(nil)
 
 // NewLogServer new ses upstream
-func NewLogServer() upstream.Server {
-	return new(logServer)
+func NewLogServer(logger *slog.Logger) upstream.Server {
+	return &logServer{logger: logger}
 }
 
 func (u *logServer) Configure(ctx context.Context, settings map[string]any) (upstream.Forwarder, error) {
@@ -44,7 +45,7 @@ func (u *logServer) Forward(ctx context.Context, mail *upstream.Email) error {
 	}
 	text := string(([]rune(string(mail.Text)))[:20]) + "..."
 
-	slog.InfoContext(ctx, "log-forwarder",
+	u.logger.InfoContext(ctx, "log-forwarder",
 		"uid", uid,
 		"from", mail.From,
 		"to", mail.To,

@@ -53,15 +53,15 @@ func Main(ctx context.Context, args ...string) error {
 
 	fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 	opts.ConfigYamlFile = filepath.Clean(opts.ConfigYamlFile)
-	slog.InfoContext(ctx, "parsing yaml", "path", opts.ConfigYamlFile)
+	logger.InfoContext(ctx, "parsing yaml", "path", opts.ConfigYamlFile)
 	cfg, err := config.ParseFile(opts.ConfigYamlFile)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to parse configuration", "path", opts.ConfigYamlFile, "err", err)
+		logger.ErrorContext(ctx, "failed to parse configuration", "path", opts.ConfigYamlFile, "err", err)
 		return err
 	}
 	cfg, err = cfg.LoadDefaults()
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to load configuration", "path", opts.ConfigYamlFile, "err", err)
+		logger.ErrorContext(ctx, "failed to load configuration", "path", opts.ConfigYamlFile, "err", err)
 		return err
 	}
 
@@ -77,7 +77,7 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 		return err
 	}
 
-	upstreamServers, err := createUpstreamServers(ctx, srvConfig.UpstreamServers)
+	upstreamServers, err := createUpstreamServers(ctx, logger, srvConfig.UpstreamServers)
 	if err != nil {
 		return err
 	}
@@ -88,6 +88,7 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 
 	srv := server.NewServer(
 		ctx,
+		logger,
 		srvConfig.Listen,
 		srvConfig.Ehlo,
 	).WithOptions(
@@ -133,21 +134,21 @@ func loadTLSConfig(serverCertificatePath, serverKeyPath string) (*tls.Config, er
 	return &tls.Config{Certificates: []tls.Certificate{cer}, MinVersion: tls.VersionTLS12}, nil
 }
 
-func createUpstreamServers(ctx context.Context, upstreamServersConfig []config.UpstreamServer) (reg upstream.Registry, err error) {
-	reg = upstream.NewEmptyRegistry()
+func createUpstreamServers(ctx context.Context, logger *slog.Logger, upstreamServersConfig []config.UpstreamServer) (reg upstream.Registry, err error) {
+	reg = upstream.NewEmptyRegistry(logger)
 	for _, serverConfig := range upstreamServersConfig {
 		var handler upstream.Forwarder
 		var _err error
 
 		switch serverConfig.Type {
 		case "smtp":
-			srv := forwarder.NewSMTPServer()
+			srv := forwarder.NewSMTPServer(logger)
 			handler, _err = srv.Configure(ctx, serverConfig.Settings)
 		case "ses":
-			srv := forwarder.NewSESServer()
+			srv := forwarder.NewSESServer(logger)
 			handler, _err = srv.Configure(ctx, serverConfig.Settings)
 		case "log":
-			srv := forwarder.NewLogServer()
+			srv := forwarder.NewLogServer(logger)
 			handler, err = srv.Configure(ctx, serverConfig.Settings)
 		default:
 			_err = fmt.Errorf("unrecognized server type: %s. allowed values: smtp, ses, log", serverConfig.Type)
