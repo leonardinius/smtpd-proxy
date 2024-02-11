@@ -1,0 +1,37 @@
+{
+    "explorer.excludeGitIgnore": true,
+    "explorer.fileNesting.enabled": true,
+    // "explorer.fileNesting.expand": true,
+    "explorer.fileNesting.patterns": {
+        ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .mailmap, .git-blame*, .pre-commit-config.yaml",
+        "go.mod": "go.mod,go.sum",
+        "go.work": "go.work,go.work.sum"
+    },
+    "explorer.sortOrder": "foldersNestsFiles",
+    "go.lintFlags": [
+        "--config",
+        "${workspaceFolder}/.golangci.yml",
+        "--fast"
+    ],
+    "go.lintTool": "golangci-lint",
+    "go.formatTool": "gofmt",
+    "go.testFlags": [
+        "-v"
+    ],
+    "[go]": {
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+        "editor.formatOnSaveMode": "file"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modifications",
+    "cSpell.words": [
+        "datetime"
+    ]
+}

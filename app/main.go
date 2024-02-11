@@ -19,7 +19,7 @@ func main() {
 
 	if err := cmd.Main(ctx, os.Args[1:]...); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+		os.Exit(1) // nolint:gocritic // defer cancel() is not called
 	}
 }
 

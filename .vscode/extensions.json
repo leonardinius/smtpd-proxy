@@ -1,0 +1,15 @@
+{
+    "recommendations": [
+        "r3inbowari.gomodexplorer",
+        "xaver.clang-format",
+        "zxh404.vscode-proto3",
+        "gruntfuggly.todo-tree",
+        "streetsidesoftware.code-spell-checker",
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "ecmel.vscode-html-css",
+        "ms-vscode.makefile-tools",
+        "foxundermoon.shell-format"
+    ]
+}
