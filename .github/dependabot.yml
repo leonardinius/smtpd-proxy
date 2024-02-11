@@ -1,5 +1,3 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
@@ -18,18 +16,9 @@ updates:
       interval: "weekly"
     allow:
       # Allow both direct and indirect updates for all packages
-      - dependency-type: "direct"  
+      - dependency-type: "direct"
     open-pull-requests-limit: 10
     groups:
-      # Specify a name for the group, which will be used in pull request titles
-      # and branch names
       aws-dependencies:
-         # Define patterns to include dependencies in the group (based on
-         # dependency name)
          patterns:
-           - "*aws*" # A single dependency name
-         # # Define patterns to exclude dependencies from the group (based on
-         # # dependency name)
-         # exclude-patterns:
-         #   - "gc_ruboconfig"
-         #   - "gocardless-*"
+           - "*aws*" # Update all dependencies with "aws" in their name
