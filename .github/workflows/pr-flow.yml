@@ -1,4 +1,4 @@
-name: ci-flow
+name: pr-flow
 
 on:
   pull_request: {}

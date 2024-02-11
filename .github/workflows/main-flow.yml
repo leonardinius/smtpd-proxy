@@ -1,4 +1,4 @@
-name: master-flow
+name: main-flow
 
 on:
   push:
