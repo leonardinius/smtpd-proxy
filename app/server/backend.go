@@ -56,21 +56,21 @@ func (s *session) isAuthOk() error {
 func (s *session) AuthPlain(username, password string) error {
 	err := s.bkd.authLoginFunc.Authenticate(username, password)
 	s.authorized = err == nil
-	zlog.Debugf("AuthPlain: %s %s", username, strconv.FormatBool(s.authorized))
+	zlog.Debugf("auth plain: %s %s", username, strconv.FormatBool(s.authorized))
 	return err
 }
 
 // Set return path for currently processed message.
 func (s *session) Mail(from string, opts *smtp.MailOptions) error {
 	err := s.isAuthOk()
-	zlog.Debugf("Mail from: %s %v", from, err)
+	zlog.Debugf("mail from: %s %v", from, err)
 	return err
 }
 
 // Add recipient for currently processed message.
 func (s *session) Rcpt(to string, opts *smtp.RcptOptions) error {
 	err := s.isAuthOk()
-	zlog.Debugf("Rcpt to: %s %v", to, err)
+	zlog.Debugf("rcpt to: %s %v", to, err)
 	return err
 }
 
@@ -81,9 +81,9 @@ func (s *session) Data(r io.Reader) (err error) {
 	}
 
 	var envelope *upstream.Email
-	zlog.Debug("DATA")
+	zlog.Debug("data")
 	if envelope, err = upstream.NewEmailFromReader(r); err != nil {
-		zlog.Error("Data err", err)
+		zlog.Error("data err", err)
 		return err
 	}
 
@@ -92,12 +92,12 @@ func (s *session) Data(r io.Reader) (err error) {
 
 // Discard currently processed message.
 func (s *session) Reset() {
-	zlog.Debug("Reset")
+	zlog.Debug("reset")
 }
 
 // Free all resources associated with session.
 func (s *session) Logout() error {
-	zlog.Debug("Logout")
+	zlog.Debug("logout")
 	s.authorized = false
 	return nil
 }

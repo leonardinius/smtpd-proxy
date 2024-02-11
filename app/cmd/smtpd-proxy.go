@@ -53,10 +53,10 @@ func Main(ctx context.Context, args ...string) error {
 
 	fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 	opts.ConfigYamlFile = filepath.Clean(opts.ConfigYamlFile)
-	zlog.Infof("Parsing yaml at path: %s", opts.ConfigYamlFile)
+	zlog.Infof("parsing yaml at path: %s", opts.ConfigYamlFile)
 	cfg, err := config.ParseFile(opts.ConfigYamlFile)
 	if err != nil {
-		zlog.Fatalf("Failed to parse configuration %s: %v", opts.ConfigYamlFile, err)
+		zlog.Fatalf("failed to parse configuration %s: %v", opts.ConfigYamlFile, err)
 	}
 	cfg, err = cfg.LoadDefaults()
 	if err != nil {
@@ -102,7 +102,7 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 			panic(x)
 		}
 
-		zlog.Infof("Starting server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
+		zlog.Infof("starting server at %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
 		errCh <- srv.ListenAndServe()
 	}()
 
@@ -110,7 +110,7 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 	case <-ctx.Done():
 		zlog.Infof("shutting down %s [EHLO %s]", srvConfig.Listen, srvConfig.Ehlo)
 		if err := srv.Shutdown(); err != nil {
-			zlog.Errorf("Failed to shutdown server: %v", err)
+			zlog.Errorf("failed to shutdown server: %v", err)
 			return err
 		}
 		return nil
