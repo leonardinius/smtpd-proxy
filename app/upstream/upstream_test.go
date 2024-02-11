@@ -1,6 +1,7 @@
 package upstream
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -73,7 +74,7 @@ func (m *MockRandom) Int() int {
 }
 
 func newRegistry(randomValues ...int) *RegistryMap {
-	r := NewEmptyRegistry()
+	r := NewEmptyRegistry(slog.Default())
 	r.rnd = &MockRandom{Values: randomValues}
 	return r
 }
