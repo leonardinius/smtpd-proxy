@@ -122,8 +122,12 @@ func dynamicPort() int {
 			panic(err)
 		}
 	}()
-	port := listener.Addr().(*net.TCPAddr).Port
-	return port
+
+	if port, ok := listener.Addr().(*net.TCPAddr); ok {
+		return port.Port
+	}
+
+	panic("Failed to get port")
 }
 
 // TerminateContainer terminates container if present.

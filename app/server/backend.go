@@ -22,7 +22,7 @@ var (
 	ErrAuthAnonCredentials = errors.New("user has not authenticated. anonymous access is not allowed")
 
 	// ErrUnsupportedMechanism error for unsupported mechanism.
-	ErrorUnsupportedMechanism = errors.New("unsupported authentication mechanism")
+	ErrUnsupportedMechanism = errors.New("unsupported authentication mechanism")
 )
 
 // The backend implements SMTP server methods.
@@ -127,7 +127,7 @@ func (s *session) Auth(mech string) (sasl.Server, error) {
 			return err
 		}), nil
 	default:
-		return nil, ErrorUnsupportedMechanism
+		return nil, ErrUnsupportedMechanism
 	}
 }
 
