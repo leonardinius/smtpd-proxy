@@ -15,10 +15,12 @@ import (
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 )
 
-const charSet = "UTF-8"
-const maxConnections = 100
+const (
+	charSet        = "UTF-8"
+	maxConnections = 100
+)
 
-// sesUpstreamSettings AWS SES upstream details
+// sesUpstreamSettings AWS SES upstream details.
 type sesUpstreamSettings struct {
 	AwsAccessKeyID     string `json:"aws_access_key_id"`
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
@@ -32,10 +34,12 @@ type sesUpstream struct {
 	logger   *slog.Logger
 }
 
-var _ upstream.Server = (*sesUpstream)(nil)
-var _ upstream.Forwarder = (*sesUpstream)(nil)
+var (
+	_ upstream.Server    = (*sesUpstream)(nil)
+	_ upstream.Forwarder = (*sesUpstream)(nil)
+)
 
-// NewSESServer new ses upstream
+// NewSESServer new ses upstream.
 func NewSESServer(logger *slog.Logger) upstream.Server {
 	return &sesUpstream{logger: logger}
 }

@@ -152,9 +152,9 @@ func createConfigurationFle(tmpdir, content string) (tmpFile *os.File, err error
 	return
 }
 
-// DynamicPort supplies random free net ports to use
+// DynamicPort supplies random free net ports to use.
 func dynamicPort() int {
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", bindHost))
+	listener, err := net.Listen("tcp", bindHost+":0")
 	if err != nil {
 		panic(err)
 	}

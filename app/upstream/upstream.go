@@ -14,12 +14,12 @@ import (
 	"github.com/jordan-wright/email"
 )
 
-var errorEmptyRegistry = errors.New("empty sender registry")
+var errEmptyRegistry = errors.New("empty sender registry")
 
-// Email wrapper for package specific (github.com/jordan-wright/email) email
+// Email wrapper for package specific (github.com/jordan-wright/email) email.
 type Email = email.Email
 
-// NewEmailFromReader reads email from DATA stream
+// NewEmailFromReader reads email from DATA stream.
 func NewEmailFromReader(r io.Reader) (*Email, error) {
 	var envelope *email.Email
 	var err error
@@ -30,27 +30,29 @@ func NewEmailFromReader(r io.Reader) (*Email, error) {
 	return envelope, nil
 }
 
-// Server inits the connecion pool to the server
+// Server inits the connecion pool to the server.
 type Server interface {
 	Configure(ctx context.Context, config map[string]any) (Forwarder, error)
 }
 
-// Forwarder queues individual email
+// Forwarder queues individual email.
 type Forwarder interface {
 	Forward(ctx context.Context, mail *Email) error
 }
 
-// Registry envelope holde of multiple upstream servers
+// Registry envelope holde of multiple upstream servers.
 type Registry interface {
 	Forwarder
 	AddForwarder(forwarder Forwarder, weight int)
 	Len() int
 }
 
-var _ Registry = (*RegistryMap)(nil)
-var _ Forwarder = (*RegistryMap)(nil)
+var (
+	_ Registry  = (*RegistryMap)(nil)
+	_ Forwarder = (*RegistryMap)(nil)
+)
 
-// context.Context metadata key
+// context.Context metadata key.
 type entryKey string
 
 var entryContextKey entryKey
@@ -59,7 +61,7 @@ type EntryMeta struct {
 	UID string
 }
 
-// registryEntry entry witin registry
+// registryEntry entry witin registry.
 type registryEntry struct {
 	originalWeight int
 	threshold      int
@@ -76,17 +78,18 @@ type RegistryMap struct {
 }
 
 // randInt interface for random values.
-// extracted to interface to be to be used in tests
+// extracted to interface to be to be used in tests.
 type randInt interface {
 	Intn(n int) int
 	Int() int
 }
 
-type randIntStruc struct {
-}
+type randIntStruc struct{}
 
-var _ randInt = (*randIntStruc)(nil)
-var _maxInt = big.NewInt(math.MaxInt)
+var (
+	_       randInt = (*randIntStruc)(nil)
+	_maxInt         = big.NewInt(math.MaxInt)
+)
 
 func newRandIntStruc() *randIntStruc {
 	return &randIntStruc{}
@@ -96,7 +99,7 @@ func (s *randIntStruc) Intn(n int) int {
 	max := big.NewInt(int64(n))
 	val, err := rand.Int(rand.Reader, max)
 	if err != nil {
-		panic(err) // out of randomness, should never happen
+		panic(err) // out of randomness, should never happen.
 	}
 	return int(val.Int64())
 }
@@ -104,12 +107,12 @@ func (s *randIntStruc) Intn(n int) int {
 func (s *randIntStruc) Int() int {
 	val, err := rand.Int(rand.Reader, _maxInt)
 	if err != nil {
-		panic(err) // out of randomness, should never happen
+		panic(err) // out of randomness, should never happen.
 	}
 	return int(val.Int64())
 }
 
-// NewEmptyRegistry creates empty new registry
+// NewEmptyRegistry creates empty new registry.
 func NewEmptyRegistry(logger *slog.Logger) *RegistryMap {
 	return &RegistryMap{
 		rnd:    newRandIntStruc(),
@@ -121,7 +124,7 @@ func (r *RegistryMap) AddForwarder(forwarder Forwarder, weight int) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	newTotal := r.totalWeight + weight
-	var uid = fmt.Sprintf("uid:%04x", r.rnd.Int())
+	uid := fmt.Sprintf("uid:%04x", r.rnd.Int())
 	newEntry := registryEntry{originalWeight: weight, threshold: newTotal, sender: forwarder, meta: EntryMeta{UID: uid}}
 	r.entriesSorted = append(r.entriesSorted, newEntry)
 	r.totalWeight = newTotal
@@ -131,10 +134,9 @@ func (r *RegistryMap) pick() (Forwarder, *registryEntry, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if len(r.entriesSorted) == 0 {
-		return nil, nil, errorEmptyRegistry
+		return nil, nil, errEmptyRegistry
 	}
 
-	// nolint:gosec // can't avoid it in this place
 	chance := r.rnd.Intn(r.totalWeight + 1)
 	acc := 0
 	for _, entry := range r.entriesSorted {

@@ -5,28 +5,20 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
 )
 
 var (
-	_timeout = time.Duration(3)
-	// ReadTimeout default 2 secs
-	ReadTimeout = _timeout * time.Second
-	// WriteTimeout default 2 secs
-	WriteTimeout = _timeout * time.Second
-	_mb          = 1024 * 1024
-	// MaxMessageBytes default 10 Mb
-	MaxMessageBytes = 10 * _mb
-	// MaxRecipients default 50
-	MaxRecipients = 50
-	// AllowInsecureAuth default true
-	AllowInsecureAuth = true
-	// EnableSMTPUTF8 default true
-	EnableSMTPUTF8 = true
+	ReadTimeout       = 3 * time.Second // ReadTimeout default 2 secs.
+	WriteTimeout      = 3 * time.Second // WriteTimeout default 2 secs.
+	_mb               = 1024 * 1024
+	MaxMessageBytes   = 10 * _mb // MaxMessageBytes default 10 Mb.
+	MaxRecipients     = 50       // MaxRecipients default 50.
+	AllowInsecureAuth = true     // AllowInsecureAuth default true.
+	EnableSMTPUTF8    = true     // EnableSMTPUTF8 default true.
 )
 
-// SMTPServer abstration
+// SMTPServer abstration.
 type SMTPServer interface {
 	Shutdown() error
 	ListenAndServe() error
@@ -50,7 +42,7 @@ func (srv *SrvBackend) ListenAndServe() error {
 	return srv.smtp.ListenAndServe()
 }
 
-// NewServer prepares SMTP server
+// NewServer prepares SMTP server.
 func NewServer(ctx context.Context, logger *slog.Logger, addr, domain string) *SrvBackend {
 	bkd := newBackend(ctx, logger, NoOpAuthFunc())
 	s := smtp.NewServer(bkd)
@@ -62,12 +54,6 @@ func NewServer(ctx context.Context, logger *slog.Logger, addr, domain string) *S
 	s.MaxRecipients = MaxRecipients
 	s.AllowInsecureAuth = AllowInsecureAuth
 	s.EnableSMTPUTF8 = EnableSMTPUTF8
-
-	s.EnableAuth(sasl.Login, func(conn *smtp.Conn) sasl.Server {
-		return sasl.NewLoginServer(func(username, password string) error {
-			return conn.Session().AuthPlain(username, password)
-		})
-	})
 
 	return &SrvBackend{smtp: s, backend: bkd}
 }

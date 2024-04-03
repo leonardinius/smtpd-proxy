@@ -2,13 +2,12 @@ package systemtest
 
 import (
 	"context"
-	"sync"
-	"testing"
-
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"sync"
+	"testing"
 	"time"
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
@@ -16,10 +15,10 @@ import (
 	tc "github.com/testcontainers/testcontainers-go"
 )
 
-// BindHost host to bind to in local smoke tests
+// BindHost host to bind to in local smoke tests.
 const BindHost = "127.0.0.1"
 
-// RunMainWithConfig run app in test suite
+// RunMainWithConfig run app in test suite.
 func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
 	t.Helper()
 
@@ -97,7 +96,7 @@ func createConfigurationFle(tempdir, content string) (tmpFile *os.File, err erro
 
 var acquiredPorts = new(sync.Map)
 
-// DynamicPort supplies random free net ports to use
+// DynamicPort supplies random free net ports to use.
 func DynamicPort() int {
 	port := dynamicPort()
 	for {
@@ -110,7 +109,7 @@ func DynamicPort() int {
 }
 
 func dynamicPort() int {
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", BindHost))
+	listener, err := net.Listen("tcp", BindHost+":0")
 	if err != nil {
 		panic(err)
 	}
@@ -124,7 +123,7 @@ func dynamicPort() int {
 	return port
 }
 
-// TerminateContainer terminates container if present
+// TerminateContainer terminates container if present.
 func TerminateContainer(ctx context.Context, container tc.Container) error {
 	if container != nil {
 		return container.Terminate(ctx)

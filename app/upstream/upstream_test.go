@@ -31,7 +31,7 @@ func TestRegistryRandomForwardPickRandomThresholds(t *testing.T) {
 		return e.meta.UID
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		rnd       int
 		forwarder string
 	}{

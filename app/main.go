@@ -19,11 +19,11 @@ func main() {
 
 	if err := cmd.Main(ctx, os.Args[1:]...); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1) // nolint:gocritic // defer cancel() is not called
+		os.Exit(1) //nolint:gocritic // defer cancel() is not called
 	}
 }
 
-// getDump reads runtime stack and returns as a string
+// getDump reads runtime stack and returns as a string.
 func getDump() string {
 	maxSize := 5 * 1024 * 1024
 	stacktrace := make([]byte, maxSize)
@@ -34,13 +34,13 @@ func getDump() string {
 	return string(stacktrace[:length])
 }
 
-// nolint:gochecknoinits // can't avoid it in this place
+//nolint:gochecknoinits // can't avoid it in this place
 func init() {
 	// catch SIGQUIT and print stack traces
 	sigChan := make(chan os.Signal, 1)
 	go func() {
 		for range sigChan {
-			slog.Info("SIGQUIT detected", "dump", getDump()) // nolint:sloglint // no context is ok here
+			slog.Info("SIGQUIT detected", "dump", getDump()) //nolint:sloglint // no context is ok here
 		}
 	}()
 	signal.Notify(sigChan, syscall.SIGQUIT)

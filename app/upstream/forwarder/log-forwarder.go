@@ -8,18 +8,19 @@ import (
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 )
 
-type logUpstreamSettings struct {
-}
+type logUpstreamSettings struct{}
 
 type logServer struct {
 	settings logUpstreamSettings
 	logger   *slog.Logger
 }
 
-var _ upstream.Server = (*logServer)(nil)
-var _ upstream.Forwarder = (*logServer)(nil)
+var (
+	_ upstream.Server    = (*logServer)(nil)
+	_ upstream.Forwarder = (*logServer)(nil)
+)
 
-// NewLogServer new ses upstream
+// NewLogServer new ses upstream.
 func NewLogServer(logger *slog.Logger) upstream.Server {
 	return &logServer{logger: logger}
 }

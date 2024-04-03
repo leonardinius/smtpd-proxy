@@ -49,7 +49,7 @@ smtpd-proxy:
 			{"plain-wrong-host", smtp.PlainAuth("", "user@example.com", "password", "wrong-host"), "wrong host name"},
 			{"plain-wrong-user", smtp.PlainAuth("", "wrong@example.com", "password", BindHost), "invalid username or password"},
 			{"plain-wrong-password", smtp.PlainAuth("", "user@example.com", "wrong-password", BindHost), "invalid username or password"},
-			{"plain-wrong-identity", smtp.PlainAuth("wrong-identity", "user@example.com", "password", BindHost), "identities not supported"},
+			{"plain-wrong-identity", smtp.PlainAuth("wrong-identity", "user@example.com", "password", BindHost), "invalid identity"},
 			//
 			{"login-ok", forwarder.NewLoginAuth("user@example.com", "password", BindHost), ""},
 			{"login-wrong-host", forwarder.NewLoginAuth("user@example.com", "password", "wrong-host"), "wrong host name"},
@@ -69,7 +69,6 @@ smtpd-proxy:
 				}
 			})
 		}
-
 	})
 }
 
