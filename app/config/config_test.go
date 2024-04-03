@@ -56,7 +56,8 @@ smtpd-proxy:
 			"address":  "127.0.0.1:1026",
 			"auth":     "plain",
 			"username": "user",
-			"password": "secret"},
+			"password": "secret",
+		},
 		srv.UpstreamServers[0].Settings)
 
 	assert.Equal(t, "ses", srv.UpstreamServers[1].Type)

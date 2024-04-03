@@ -22,10 +22,12 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var _ suite.SetupAllSuite = (*SMTPSystemTestSuite)(nil)
-var _ suite.TearDownAllSuite = (*SMTPSystemTestSuite)(nil)
+var (
+	_ suite.SetupAllSuite    = (*SMTPSystemTestSuite)(nil)
+	_ suite.TearDownAllSuite = (*SMTPSystemTestSuite)(nil)
+)
 
-// SMTPSystemTestSuite suite
+// SMTPSystemTestSuite suite.
 type SMTPSystemTestSuite struct {
 	suite.Suite
 	ctx   context.Context
@@ -33,8 +35,9 @@ type SMTPSystemTestSuite struct {
 }
 
 // In order for 'go test' to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run
+// a normal test function and pass our suite to suite.Run.
 func TestSMTPSystemTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(SMTPSystemTestSuite))
 }
 
@@ -47,8 +50,6 @@ func (su *SMTPSystemTestSuite) SetupSuite() {
 	if err != nil {
 		su.T().Fatalf("Errors: %v ", err)
 	}
-
-	su.T().Parallel()
 }
 
 func (su *SMTPSystemTestSuite) TearDownSuite() {
@@ -66,7 +67,7 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardSimpleEmail() {
 	smtpPort := strings.SplitN(string(smtpPortProto), "/", 2)[0]
 	apiPort, err := su.smtpd.MappedPort(su.ctx, "8080/tcp")
 	require.NoError(su.T(), err)
-	apiEndpoint := fmt.Sprintf("http://%s:%s", BindHost, apiPort.Port())
+	apiEndpoint := "http://" + net.JoinHostPort(BindHost, apiPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s
@@ -114,7 +115,7 @@ func (su *SMTPSystemTestSuite) TestSmokeSMTPForwardAcceptsEMailWithAttachments()
 	smtpPort := strings.SplitN(string(_smtpPort), "/", 2)[0]
 	apiPort, err := su.smtpd.MappedPort(su.ctx, "8080/tcp")
 	require.NoError(su.T(), err)
-	apiEndpoint := fmt.Sprintf("http://%s:%s", BindHost, apiPort.Port())
+	apiEndpoint := "http://" + net.JoinHostPort(BindHost, apiPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s
@@ -141,7 +142,7 @@ smtpd-proxy:
 		_, err := envelope.AttachFile("_testData/text-attachment.txt")
 		require.NoError(t, err, "failed to attach file")
 		// FakeSMTPServer is not very stable so it seems to be a good idea to retry
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			err = envelope.Send(proxyEndpoint, auth)
 			if err == nil {
 				break

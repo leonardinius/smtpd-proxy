@@ -1,15 +1,9 @@
 run:
   timeout: 5m
-  skip-dirs:
-    - vendor
 
 linters-settings:
-  govet:
-    check-shadowing: true
-  golint:
-    min-confidence: 0.1
-  maligned:
-    suggest-new: true
+  gci:
+    prefix: github.com/leonardinius/go-service-template
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -27,47 +21,49 @@ linters-settings:
     severity: warning
     enable-all-rules: false
   sloglint:
-      no-mixed-args: true
-      kv-only: true
-      context-only: true
-      static-msg: true
-      # Enforce a single key naming convention.
-      # Values: snake, kebab, camel, pascal
-      # Default: ""
-      key-naming-case: snake
+    no-mixed-args: true
+    kv-only: true
+    context-only: true
+    static-msg: true
+    # Enforce a single key naming convention. Values: snake, kebab, camel, pascal. Default: ""
+    key-naming-case: snake
 linters:
-  enable:
-    - bodyclose
-    - megacheck
-    - revive
-    - govet
-    - unconvert
-    - megacheck
-    - gas
-    - gocyclo
-    - dupl
-    - misspell
-    - unparam
-    - typecheck
-    - ineffassign
-    - stylecheck
-    - gochecknoinits
-    - exportloopref
-    - gocritic
-    - nakedret
-    - gosimple
-    - prealloc
-    - unused
-    - sloglint
   disable:
-    - errcheck
-    - structcheck #abandoned (1.49.0) replaced by unused
-    - varcheck #abandoned (1.49.0) replaced by unused
-    - deadcode #abandoned (1.49.0) replaced by unused
+    - containedctx
+    - cyclop
+    - depguard
+    - exhaustruct
+    - forbidigo
+    - gochecknoglobals
+    - gochecknoinits
+    - goconst
+    - goerr113
+    - gomnd
+    - ireturn
+    - nlreturn
+    - nonamedreturns
+    - tagliatelle
+    - varnamelen
+    - wrapcheck
+    - wsl
+      # dead packages
+    - deadcode
+    - exhaustivestruct
+    - golint
+    - ifshort
+    - interfacer
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - varcheck
   fast: false
-  disable-all: false
+  enable-all: true
 
 issues:
+  exclude-dirs:
+    - vendor
+    - pkg/gen
   exclude-rules:
     - text: "at least one file in a package should have a package comment"
       linters:
@@ -76,15 +72,29 @@ issues:
       linters:
         - golint
         - revive
+    - path: app/cmd/smtpd-proxy\.go
+      linters:
+        - lll
     - path: _test\.go
+      linters:
+        - containedctx
+        - dupl
+        - errcheck
+        - forcetypeassert
+        - funlen
+        - gosec
+        - noctx
+        - paralleltest
+        - testifylint
+        - testpackage
+        - thelper
+        - wrapcheck
+    - path: e2e/.*\.go
       linters:
         - gosec
         - dupl
-    - text: "use of weak random number generator \\(math/rand instead of crypto/rand\\)"
+        - wrapcheck
+    - path: cmd/.*\.go
       linters:
-        - gosec
-    - text: 'Deferring unsafe method "Close"'
-      path: tests/infra\.go
-      linters:
-        - gosec
+        - gochecknoinits
   exclude-use-default: false

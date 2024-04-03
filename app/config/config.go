@@ -13,35 +13,37 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-var _emptyConfig = Config{}
-var errorEmptyFile = errors.New("empty yaml file contents")
-var errorEmptyUpstreamServers = errors.New("no specified upstream servers, supported: smtp, ses, log")
+var (
+	_emptyConfig            = Config{}
+	errEmptyFile            = errors.New("empty yaml file contents")
+	errEmptyUpstreamServers = errors.New("no specified upstream servers, supported: smtp, ses, log")
+)
 
-// Config represents the structure of the yaml file
+// Config represents the structure of the yaml file.
 type Config struct {
 	ServerConfig ProxyServerConfig `yaml:"smtpd-proxy"`
 }
 
-// ProxyServerConfig the top level config
+// ProxyServerConfig the top level config.
 type ProxyServerConfig struct {
-	Listen                string           `yaml:"listen" default:"127.0.0.1:1025"`
-	Ehlo                  string           `yaml:"ehlo" default:"-"`
-	Username              string           `yaml:"username" default:"-"`
-	Password              string           `yaml:"password" default:"-"`
-	IsAnonAuthAllowed     bool             `yaml:"is_anon_auth_allowed" default:"-"`
-	ServerCertificatePath string           `yaml:"server-cert" default:"-"`
-	ServerKeyPath         string           `yaml:"server-key" default:"-"`
+	Listen                string           `default:"127.0.0.1:1025" yaml:"listen"`
+	Ehlo                  string           `default:"-"              yaml:"ehlo"`
+	Username              string           `default:"-"              yaml:"username"`
+	Password              string           `default:"-"              yaml:"password"`
+	IsAnonAuthAllowed     bool             `default:"-"              yaml:"is_anon_auth_allowed"`
+	ServerCertificatePath string           `default:"-"              yaml:"server-cert"`
+	ServerKeyPath         string           `default:"-"              yaml:"server-key"`
 	UpstreamServers       []UpstreamServer `yaml:"upstream-servers"`
 }
 
-// UpstreamServer upstream server config
+// UpstreamServer upstream server config.
 type UpstreamServer struct {
-	Type     string         `yaml:"type" default:"smtp"`
-	Weight   int            `yaml:"weight" default:"1"`
-	Settings map[string]any `yaml:"settings" default:"{}"`
+	Type     string         `default:"smtp" yaml:"type"`
+	Weight   int            `default:"1"    yaml:"weight"`
+	Settings map[string]any `default:"{}"   yaml:"settings"`
 }
 
-// Parse takes a raw data and returns Config
+// Parse takes a raw data and returns Config.
 func Parse(reader io.Reader) (*Config, error) {
 	var c Config
 
@@ -55,13 +57,13 @@ func Parse(reader io.Reader) (*Config, error) {
 	}
 
 	if reflect.DeepEqual(c, _emptyConfig) {
-		return nil, errorEmptyFile
+		return nil, errEmptyFile
 	}
 
 	return &c, nil
 }
 
-// ParseFile takes a path to a yaml file and produces a parsed Config
+// ParseFile takes a path to a yaml file and produces a parsed Config.
 func ParseFile(path string) (*Config, error) {
 	data, err := os.Open(filepath.Clean(path))
 	if err != nil {
@@ -71,7 +73,7 @@ func ParseFile(path string) (*Config, error) {
 	return Parse(data)
 }
 
-// LoadDefaults sets defaults for configuration
+// LoadDefaults sets defaults for configuration.
 func (c *Config) LoadDefaults() (*Config, error) {
 	if err := defaults.Set(c); err != nil {
 		return nil, err
@@ -96,7 +98,7 @@ func (c *Config) LoadDefaults() (*Config, error) {
 	}
 
 	if len(c.ServerConfig.UpstreamServers) == 0 {
-		return nil, errorEmptyUpstreamServers
+		return nil, errEmptyUpstreamServers
 	}
 
 	if err != nil {

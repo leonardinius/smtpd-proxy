@@ -3,6 +3,7 @@ package systemtest
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net"
 	"net/smtp"
@@ -11,8 +12,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -28,10 +27,12 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var _ suite.SetupAllSuite = (*SESSystemTestSuite)(nil)
-var _ suite.TearDownAllSuite = (*SESSystemTestSuite)(nil)
+var (
+	_ suite.SetupAllSuite    = (*SESSystemTestSuite)(nil)
+	_ suite.TearDownAllSuite = (*SESSystemTestSuite)(nil)
+)
 
-// SESSystemTestSuite suite
+// SESSystemTestSuite suite.
 type SESSystemTestSuite struct {
 	suite.Suite
 	ctx        context.Context
@@ -39,7 +40,7 @@ type SESSystemTestSuite struct {
 }
 
 // In order for 'go test' to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run
+// a normal test function and pass our suite to suite.Run.
 func TestSESSystemTestSuite(t *testing.T) {
 	suite.Run(t, new(SESSystemTestSuite))
 }
@@ -69,7 +70,7 @@ func (su *SESSystemTestSuite) TestSmokeSESForwardAcceptsSimpleEMail() {
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	sesPort, err := su.localstack.MappedPort(su.ctx, "4566/tcp")
 	require.NoError(su.T(), err)
-	sesEndpoint := fmt.Sprintf("http://%s:%s", BindHost, sesPort.Port())
+	sesEndpoint := "http://" + net.JoinHostPort(BindHost, sesPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s:%d
@@ -121,7 +122,7 @@ func (su *SESSystemTestSuite) TestSmokeSESForwardAcceptsEMailWithAttachments() {
 	proxyEndpoint := fmt.Sprintf("%s:%d", BindHost, port)
 	sesPort, err := su.localstack.MappedPort(su.ctx, "4566/tcp")
 	require.NoError(su.T(), err)
-	sesEndpoint := fmt.Sprintf("http://%s:%s", BindHost, sesPort.Port())
+	sesEndpoint := "http://" + net.JoinHostPort(BindHost, sesPort.Port())
 	config := fmt.Sprintf(`
 smtpd-proxy:
   listen: %s:%d

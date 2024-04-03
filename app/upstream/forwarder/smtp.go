@@ -3,6 +3,7 @@ package forwarder
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -11,7 +12,13 @@ import (
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 )
 
-// smtpUpstreamSettings smtp details
+var errUnrecognizedAuthType = errors.New("unrecognized auth type")
+
+func unrecognizedAuthTypeError(authType string) error {
+	return fmt.Errorf("%w: %s, supported values [login, plain, cram-md5, anon]", errUnrecognizedAuthType, authType)
+}
+
+// smtpUpstreamSettings smtp details.
 type smtpUpstreamSettings struct {
 	Addr     string `json:"addr"`
 	Auth     string `json:"auth"`
@@ -26,10 +33,12 @@ type smptUpstream struct {
 	logger   *slog.Logger
 }
 
-var _ upstream.Server = (*smptUpstream)(nil)
-var _ upstream.Forwarder = (*smptUpstream)(nil)
+var (
+	_ upstream.Server    = (*smptUpstream)(nil)
+	_ upstream.Forwarder = (*smptUpstream)(nil)
+)
 
-// NewSMTPServer new smtp upstream
+// NewSMTPServer new smtp upstream.
 func NewSMTPServer(logger *slog.Logger) upstream.Server {
 	return &smptUpstream{logger: logger}
 }
@@ -71,7 +80,7 @@ func (u *smptUpstream) initAuth() (auth smtp.Auth, err error) {
 	case "anon":
 		auth = nil
 	default:
-		err = fmt.Errorf("unrecognized auth type: %s, supported values [login, plain, cram-md5, anon]", authType)
+		err = unrecognizedAuthTypeError(authType)
 	}
 	return
 }

@@ -3,13 +3,12 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
-
-	"errors"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/jessevdk/go-flags"
@@ -20,27 +19,31 @@ import (
 )
 
 var (
-	// COMMIT git commit
+	// COMMIT git commit.
 	COMMIT = "gitsha1"
-	// BRANCH git branch
+	// BRANCH git branch.
 	BRANCH = "dirty"
 )
 
-// Opts with all cli commands and flags
+// Opts with all cli commands and flags.
 type Opts struct {
-	ConfigYamlFile string `long:"configuration" short:"c" env:"SMTPD_CONFIG" required:"true" default:"smtpd-proxy.yml" description:"smtpd-proxy.yml configuration path"`
-	Verbose        bool   `long:"verbose" short:"v" env:"VERBOSE" description:"verbose mode"`
+	ConfigYamlFile string `default:"smtpd-proxy.yml"  description:"smtpd-proxy.yml configuration path" env:"SMTPD_CONFIG" long:"configuration" required:"true" short:"c"`
+	Verbose        bool   `description:"verbose mode" env:"VERBOSE"                                    long:"verbose"     short:"v"`
 }
 
-var errorEmptyRegistry = errors.New("empty sender registry")
+var (
+	errEmptyRegistry = errors.New("empty sender registry")
+	errNoTLS         = errors.New("no tls configuration")
+)
 
-// Main function
+// Main function.
 func Main(ctx context.Context, args ...string) error {
 	var opts Opts
 	p := flags.NewParser(&opts, flags.Default)
 
 	if _, err := p.ParseArgs(args); err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+		var flagsErr *flags.Error
+		if ok := errors.As(err, &flagsErr); ok && flagsErr.Type == flags.ErrHelp {
 			fmt.Printf("smtpd-proxy revision %s-%s\n", BRANCH, COMMIT)
 			os.Exit(0)
 		} else {
@@ -68,12 +71,12 @@ func Main(ctx context.Context, args ...string) error {
 	return ListenProxyAndServe(ctx, cfg)
 }
 
-// ListenProxyAndServe run proxy cmd
+// ListenProxyAndServe run proxy cmd.
 func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 	srvConfig := c.ServerConfig
 	logger := slog.Default().With("server", srvConfig.Listen, "ehlo", srvConfig.Ehlo)
 	tlsConfig, err := loadTLSConfig(srvConfig.ServerCertificatePath, srvConfig.ServerKeyPath)
-	if err != nil {
+	if err != nil && !errors.Is(err, errNoTLS) {
 		return err
 	}
 
@@ -92,8 +95,8 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 		srvConfig.Listen,
 		srvConfig.Ehlo,
 	).WithOptions(
-		server.WithAuth(server.NewHardcodedAuthFunc(srvConfig.Username, srvConfig.Password)),
 		server.WithAnnonAuthAllowed(srvConfig.IsAnonAuthAllowed),
+		server.WithAuth(server.NewHardcodedAuthFunc(srvConfig.Ehlo, srvConfig.Username, srvConfig.Password)),
 		server.WithTLSConfig(tlsConfig),
 		server.WithUpstreamServers(upstreamServers),
 	)
@@ -125,7 +128,7 @@ func ListenProxyAndServe(ctx context.Context, c *config.Config) error {
 
 func loadTLSConfig(serverCertificatePath, serverKeyPath string) (*tls.Config, error) {
 	if serverCertificatePath == "" && serverKeyPath == "" {
-		return nil, nil
+		return nil, errNoTLS
 	}
 	cer, err := tls.LoadX509KeyPair(serverCertificatePath, serverKeyPath)
 	if err != nil {
@@ -134,7 +137,10 @@ func loadTLSConfig(serverCertificatePath, serverKeyPath string) (*tls.Config, er
 	return &tls.Config{Certificates: []tls.Certificate{cer}, MinVersion: tls.VersionTLS12}, nil
 }
 
-func createUpstreamServers(ctx context.Context, logger *slog.Logger, upstreamServersConfig []config.UpstreamServer) (reg upstream.Registry, err error) {
+func createUpstreamServers(ctx context.Context,
+	logger *slog.Logger,
+	upstreamServersConfig []config.UpstreamServer,
+) (reg upstream.Registry, err error) {
 	reg = upstream.NewEmptyRegistry(logger)
 	for _, serverConfig := range upstreamServersConfig {
 		var handler upstream.Forwarder
@@ -163,7 +169,7 @@ func createUpstreamServers(ctx context.Context, logger *slog.Logger, upstreamSer
 	}
 
 	if reg.Len() <= 0 {
-		multierror.Append(err, errorEmptyRegistry)
+		err = multierror.Append(err, errEmptyRegistry)
 	}
 
 	return reg, err

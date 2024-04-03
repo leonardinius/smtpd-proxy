@@ -8,18 +8,24 @@ import (
 	"net/smtp"
 )
 
+var (
+	errUnecryptedConnection      = errors.New("unencrypted connection")
+	errWrongHostName             = errors.New("wrong host name")
+	errUnknownResponseFromServer = errors.New("unknown response from server")
+)
+
 var _ smtp.Auth = (*loginAuth)(nil)
 
 type loginAuth struct {
 	username, password, host string
 }
 
-// NewLoginAuth return smtp auth LOGIN authentication
+// NewLoginAuth return smtp auth LOGIN authentication.
 func NewLoginAuth(username, password, host string) smtp.Auth {
 	return &loginAuth{username, password, host}
 }
 
-// Start smtp.Auth interface
+// Start smtp.Auth interface.
 func (a *loginAuth) Start(server *smtp.ServerInfo) (proto string, toServer []byte, err error) {
 	if err := a.checkCopiedFromStdPlainAuth(server); err != nil {
 		return "LOGIN", nil, err
@@ -35,15 +41,15 @@ func (a *loginAuth) checkCopiedFromStdPlainAuth(server *smtp.ServerInfo) error {
 	// That might just be the attacker saying
 	// "it's ok, you can trust me with your password."
 	if !server.TLS && !isLocalhost(server.Name) {
-		return errors.New("unencrypted connection")
+		return errUnecryptedConnection
 	}
 	if server.Name != a.host {
-		return errors.New("wrong host name")
+		return errWrongHostName
 	}
 	return nil
 }
 
-// Next smtp.Auth interface
+// Next smtp.Auth interface.
 func (a *loginAuth) Next(fromServer []byte, more bool) (toServer []byte, err error) {
 	if more {
 		switch string(fromServer) {
@@ -52,7 +58,7 @@ func (a *loginAuth) Next(fromServer []byte, more bool) (toServer []byte, err err
 		case "Password:":
 			return []byte(a.password), nil
 		default:
-			return nil, errors.New("unknown response from server")
+			return nil, errUnknownResponseFromServer
 		}
 	}
 	return nil, nil

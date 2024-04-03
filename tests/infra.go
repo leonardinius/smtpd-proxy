@@ -2,13 +2,12 @@ package systemtest
 
 import (
 	"context"
-	"sync"
-	"testing"
-
-	"fmt"
 	"log"
 	"net"
 	"os"
+	"strconv"
+	"sync"
+	"testing"
 	"time"
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
@@ -16,10 +15,10 @@ import (
 	tc "github.com/testcontainers/testcontainers-go"
 )
 
-// BindHost host to bind to in local smoke tests
+// BindHost host to bind to in local smoke tests.
 const BindHost = "127.0.0.1"
 
-// RunMainWithConfig run app in test suite
+// RunMainWithConfig run app in test suite.
 func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, port int, test func(t *testing.T, conn net.Conn)) {
 	t.Helper()
 
@@ -40,35 +39,38 @@ func RunMainWithConfig(ctx context.Context, t *testing.T, yamlConfig string, por
 	}()
 
 	conn := waitForPortListenStart(ctx, t, port)
+	err = conn.SetDeadline(time.Now().Add(500 * time.Millisecond))
+	require.NoError(t, err, "SMTP set connection deadline error")
 	test(t, conn)
 }
 
 func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn net.Conn) {
-	var d net.Dialer
-	var err error
-	addr := fmt.Sprintf("%s:%d", BindHost, port)
-	poll := time.NewTicker(20 * time.Millisecond)
+	t.Helper()
+
+	addr := net.JoinHostPort(BindHost, strconv.Itoa(port))
+
+	poll := time.NewTicker(50 * time.Millisecond)
 	defer poll.Stop()
+
 	timeout := time.NewTimer(5 * time.Second)
 	defer timeout.Stop()
 
-	select {
-	case <-poll.C:
-		conn, _ = checkAddr(ctx, &d, addr)
-		if conn != nil {
-			break
-		}
-	case <-timeout.C:
-		t.Fatal("SMTP open timeout")
-		break
-	}
+	for {
+		select {
+		case <-timeout.C:
+			t.Fatalf("%s port open timeout", addr)
 
-	require.NotNil(t, conn)
-	err = conn.SetDeadline(time.Now().Add(500 * time.Millisecond))
-	if err != nil {
-		t.Fatal("SMTP set connection deadline error", err)
+		case <-ctx.Done():
+			t.Fatalf("%s port open error, parent context is done: %v", addr, ctx.Err())
+
+		case <-poll.C:
+			var d net.Dialer
+			conn, _ = checkAddr(ctx, &d, addr)
+			if conn != nil {
+				return conn
+			}
+		}
 	}
-	return conn
 }
 
 func checkAddr(ctx context.Context, d *net.Dialer, addr string) (net.Conn, error) {
@@ -97,7 +99,7 @@ func createConfigurationFle(tempdir, content string) (tmpFile *os.File, err erro
 
 var acquiredPorts = new(sync.Map)
 
-// DynamicPort supplies random free net ports to use
+// DynamicPort supplies random free net ports to use.
 func DynamicPort() int {
 	port := dynamicPort()
 	for {
@@ -110,7 +112,7 @@ func DynamicPort() int {
 }
 
 func dynamicPort() int {
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", BindHost))
+	listener, err := net.Listen("tcp", BindHost+":0")
 	if err != nil {
 		panic(err)
 	}
@@ -120,11 +122,15 @@ func dynamicPort() int {
 			panic(err)
 		}
 	}()
-	port := listener.Addr().(*net.TCPAddr).Port
-	return port
+
+	if port, ok := listener.Addr().(*net.TCPAddr); ok {
+		return port.Port
+	}
+
+	panic("Failed to get port")
 }
 
-// TerminateContainer terminates container if present
+// TerminateContainer terminates container if present.
 func TerminateContainer(ctx context.Context, container tc.Container) error {
 	if container != nil {
 		return container.Terminate(ctx)

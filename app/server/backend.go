@@ -6,15 +6,24 @@ import (
 	"io"
 	"log/slog"
 
+	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 )
 
-// ErrorAuthCredentials error for invalid authentication
-var ErrorAuthCredentials = errors.New("invalid username or password")
+var (
+	// ErrInvalidIdentity error for invalid identity (domain check).
+	ErrInvalidIdentity = errors.New("invalid identity")
 
-// ErrorAuthAnonCredentials error for unauthorized access
-var ErrorAuthAnonCredentials = errors.New("user has not authenticated. anonymous access is not allowed")
+	// ErrAuthCredentials error for invalid authentication.
+	ErrAuthCredentials = errors.New("invalid username or password")
+
+	// ErrAuthAnonCredentials error for unauthorized access.
+	ErrAuthAnonCredentials = errors.New("user has not authenticated. anonymous access is not allowed")
+
+	// ErrUnsupportedMechanism error for unsupported mechanism.
+	ErrUnsupportedMechanism = errors.New("unsupported authentication mechanism")
+)
 
 // The backend implements SMTP server methods.
 type backend struct {
@@ -28,10 +37,11 @@ type backend struct {
 // The session implements SMTP session methods.
 type session struct {
 	bkd        *backend
+	conn       *smtp.Conn
 	authorized bool
 }
 
-// NewBackend Creates new backend
+// NewBackend Creates new backend.
 func newBackend(ctx context.Context, logger *slog.Logger, authLoginFunc AuthFunc) *backend {
 	return &backend{logger: logger, authLoginFunc: authLoginFunc, ctx: ctx}
 }
@@ -39,25 +49,18 @@ func newBackend(ctx context.Context, logger *slog.Logger, authLoginFunc AuthFunc
 var _ smtp.Backend = (*backend)(nil)
 
 func (bkd *backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
-	return &session{bkd: bkd}, nil
+	return &session{bkd: bkd, conn: c}, nil
 }
 
-var _ smtp.Session = (*session)(nil)
+var _ smtp.AuthSession = (*session)(nil)
 
-// Check if user is authorized or anon login is allowed
+// Check if user is authorized or anon login is allowed.
 func (s *session) isAuthOk() error {
 	if s.bkd.isAnonAllowed || s.authorized {
 		return nil
 	}
 
-	return ErrorAuthAnonCredentials
-}
-
-func (s *session) AuthPlain(username, password string) error {
-	err := s.bkd.authLoginFunc.Authenticate(username, password)
-	s.authorized = err == nil
-	s.bkd.logger.DebugContext(s.bkd.ctx, "auth plain", "username", username, "authorized", s.authorized)
-	return err
+	return ErrAuthAnonCredentials
 }
 
 // Set return path for currently processed message.
@@ -103,31 +106,60 @@ func (s *session) Logout() error {
 	return nil
 }
 
-// AuthFunc authentitate function type
-type AuthFunc interface {
-	Authenticate(username, password string) error
+func (s *session) AuthMechanisms() []string {
+	return []string{sasl.Plain, sasl.Login}
 }
 
-type authFunc func(username, password string) error
+func (s *session) Auth(mech string) (sasl.Server, error) {
+	switch mech {
+	case sasl.Plain:
+		return sasl.NewPlainServer(func(identity, username, password string) error {
+			err := s.bkd.authLoginFunc.Authenticate(identity, username, password)
+			s.authorized = err == nil
+			s.bkd.logger.DebugContext(s.bkd.ctx, "auth plain", "username", username, "authorized", s.authorized)
+			return err
+		}), nil
+	case sasl.Login:
+		return sasl.NewLoginServer(func(username, password string) error {
+			err := s.bkd.authLoginFunc.Authenticate("", username, password)
+			s.authorized = err == nil
+			s.bkd.logger.DebugContext(s.bkd.ctx, "auth login", "username", username, "authorized", s.authorized)
+			return err
+		}), nil
+	default:
+		return nil, ErrUnsupportedMechanism
+	}
+}
+
+// AuthFunc authentitate function type.
+type AuthFunc interface {
+	Authenticate(identity, username, password string) error
+}
+
+type authFunc func(identity, username, password string) error
 
 var _ AuthFunc = (*authFunc)(nil)
 
-func (f authFunc) Authenticate(username, password string) error {
-	return f(username, password)
+func (f authFunc) Authenticate(identity, username, password string) error {
+	return f(identity, username, password)
 }
 
-// NoOpAuthFunc default auth forbidden auth function
+// NoOpAuthFunc default auth forbidden auth function.
 func NoOpAuthFunc() AuthFunc {
-	return authFunc(func(username, password string) error {
-		return ErrorAuthCredentials
+	return authFunc(func(identity, username, password string) error {
+		return ErrAuthCredentials
 	})
 }
 
-// NewHardcodedAuthFunc hardcoded credentials auth function
-func NewHardcodedAuthFunc(username, password string) AuthFunc {
-	return authFunc(func(_username, _password string) error {
+// NewHardcodedAuthFunc hardcoded credentials auth function.
+func NewHardcodedAuthFunc(identity, username, password string) AuthFunc {
+	return authFunc(func(_identity, _username, _password string) error {
+		if _identity != "" && identity != _identity {
+			return ErrInvalidIdentity
+		}
+
 		if username != _username || password != _password {
-			return ErrorAuthCredentials
+			return ErrAuthCredentials
 		}
 		return nil
 	})
