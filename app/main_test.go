@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -86,31 +87,32 @@ smtpd-proxy:
 }
 
 func waitForPortListenStart(ctx context.Context, t *testing.T, port int) (conn net.Conn) {
-	var d net.Dialer
-	var err error
-	addr := fmt.Sprintf("%s:%d", bindHost, port)
+	t.Helper()
+
+	addr := net.JoinHostPort(bindHost, strconv.Itoa(port))
+
 	poll := time.NewTicker(50 * time.Millisecond)
 	defer poll.Stop()
+
 	timeout := time.NewTimer(5 * time.Second)
 	defer timeout.Stop()
 
-	select {
-	case <-poll.C:
-		conn, _ = checkAddr(ctx, &d, addr)
-		if conn != nil {
-			break
-		}
-	case <-timeout.C:
-		t.Fatal("SMTP open timeout")
-		break
-	}
+	for {
+		select {
+		case <-timeout.C:
+			t.Fatalf("%s port open timeout", addr)
 
-	require.NotNil(t, conn)
-	err = conn.SetDeadline(time.Now().Add(100 * time.Millisecond))
-	if err != nil {
-		t.Fatal("SMTP set connection deadline error", err)
+		case <-ctx.Done():
+			t.Fatalf("%s port open error, parent context is done: %v", addr, ctx.Err())
+
+		case <-poll.C:
+			var d net.Dialer
+			conn, _ = checkAddr(ctx, &d, addr)
+			if conn != nil {
+				return conn
+			}
+		}
 	}
-	return conn
 }
 
 func checkAddr(ctx context.Context, d *net.Dialer, addr string) (net.Conn, error) {
