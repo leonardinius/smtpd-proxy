@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
-	github.com/aws/aws-sdk-go-v2/service/ses v1.22.4
+	github.com/aws/aws-sdk-go-v2/service/ses v1.22.5
 	github.com/creasty/defaults v1.7.0
 	github.com/docker/docker v26.1.0+incompatible
 	github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
