@@ -96,8 +96,8 @@ func newRandIntStruc() *randIntStruc {
 }
 
 func (s *randIntStruc) Intn(n int) int {
-	max := big.NewInt(int64(n))
-	val, err := rand.Int(rand.Reader, max)
+	maxN := big.NewInt(int64(n))
+	val, err := rand.Int(rand.Reader, maxN)
 	if err != nil {
 		panic(err) // out of randomness, should never happen.
 	}
