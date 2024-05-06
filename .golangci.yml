@@ -23,7 +23,7 @@ linters-settings:
   sloglint:
     no-mixed-args: true
     kv-only: true
-    context-only: true
+    context: all
     static-msg: true
     # Enforce a single key naming convention. Values: snake, kebab, camel, pascal. Default: ""
     key-naming-case: snake
@@ -37,8 +37,10 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - goconst
-    - goerr113
+    - err113
     - gomnd
+    - mnd
+    - execinquery
     - ireturn
     - nlreturn
     - nonamedreturns
