@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"net/smtp"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +19,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	awscreds "github.com/aws/aws-sdk-go-v2/credentials"
 	awsses "github.com/aws/aws-sdk-go-v2/service/ses"
+	endpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/jordan-wright/email"
@@ -204,22 +207,17 @@ func iniFakeSesSMTPContainer(ctx context.Context) (tc.Container, error) {
 }
 
 func newSesClient(ctx context.Context, t *testing.T, endpoint string) *awsses.Client {
-	endpointResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{
-			PartitionID:   "aws",
-			URL:           endpoint,
-			SigningRegion: "us-east-1",
-		}, nil
-	})
-	credentialsProvider := awscreds.
-		NewStaticCredentialsProvider("amz-key-1", "amz-**-secret", "")
+	u, err := url.Parse(endpoint)
+	require.NoError(t, err)
+	v2Resolver := &v2EndpointResolver{Endpoint: u, Headers: http.Header{}}
+
+	credentialsProvider := awscreds.NewStaticCredentialsProvider("amz-key-1", "amz-**-secret", "")
 	cfg, err := awsconfig.LoadDefaultConfig(ctx,
-		awsconfig.WithEndpointResolverWithOptions(endpointResolver),
 		awsconfig.WithRegion("us-east-1"),
 		awsconfig.WithCredentialsProvider(credentialsProvider),
 	)
 	require.NoError(t, err)
-	return awsses.NewFromConfig(cfg)
+	return awsses.NewFromConfig(cfg, awsses.WithEndpointResolverV2(v2Resolver))
 }
 
 func requireSesFileWithContains(t *testing.T, needle string) *os.File {
@@ -261,3 +259,18 @@ func requireSesFileWithContains(t *testing.T, needle string) *os.File {
 	require.NoError(t, err)
 	return sesFile
 }
+
+type v2EndpointResolver struct {
+	Endpoint *url.URL
+	Headers  http.Header
+}
+
+// ResolveEndpoint implements ses.EndpointResolverV2.
+func (r *v2EndpointResolver) ResolveEndpoint(ctx context.Context, params awsses.EndpointParameters) (endpoints.Endpoint, error) {
+	return endpoints.Endpoint{
+		URI:     *r.Endpoint,
+		Headers: r.Headers,
+	}, nil
+}
+
+var _ awsses.EndpointResolverV2 = (*v2EndpointResolver)(nil)

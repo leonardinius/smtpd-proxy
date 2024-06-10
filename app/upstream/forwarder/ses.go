@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"log/slog"
 	gohttp "net/http"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awsses "github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
+	endpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/leonardinius/smtpd-proxy/app/upstream"
 )
 
@@ -30,7 +32,7 @@ type sesUpstreamSettings struct {
 
 type sesUpstream struct {
 	settings sesUpstreamSettings
-	ses      *ses.Client
+	client   *awsses.Client
 	logger   *slog.Logger
 }
 
@@ -62,23 +64,20 @@ func (u *sesUpstream) Configure(ctx context.Context, settings map[string]any) (u
 		tr.MaxIdleConnsPerHost = maxConnections
 		tr.MaxConnsPerHost = 0
 	})
-	endpointResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if c.Region != "" {
-			region = c.Region
-		}
-		if c.Endpoint != "" {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           c.Endpoint,
-				SigningRegion: region,
-			}, nil
-		}
 
-		// returning EndpointNotFoundError will allow the service to fallback to its default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
+	opts := make([]func(*awsses.Options), 0)
+	if c.Endpoint != "" {
+		u, err := url.Parse(c.Endpoint)
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, awsses.WithEndpointResolverV2(&v2EndpointResolver{
+			Endpoint: u,
+			Headers:  gohttp.Header{},
+		}))
+	}
+
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithEndpointResolverWithOptions(endpointResolver),
 		config.WithRegion(c.Region),
 		config.WithCredentialsProvider(credentialsProvider),
 		config.WithHTTPClient(httpClient),
@@ -87,7 +86,7 @@ func (u *sesUpstream) Configure(ctx context.Context, settings map[string]any) (u
 		return nil, err
 	}
 
-	u.ses = ses.NewFromConfig(cfg)
+	u.client = awsses.NewFromConfig(cfg, opts...)
 	return u, nil
 }
 
@@ -110,19 +109,19 @@ func (u *sesUpstream) sesForwardRaw(ctx context.Context, mail *upstream.Email) e
 	destinations = append(destinations, mail.Bcc...)
 	destinations = append(destinations, mail.Cc...)
 
-	inputRaw := &ses.SendRawEmailInput{
+	inputRaw := &awsses.SendRawEmailInput{
 		Source:       aws.String(mail.From),
 		Destinations: destinations,
 		RawMessage:   &types.RawMessage{Data: bytes},
 	}
 
 	// Attempt to send the email.
-	_, err = u.ses.SendRawEmail(ctx, inputRaw)
+	_, err = u.client.SendRawEmail(ctx, inputRaw)
 	return err
 }
 
 func (u *sesUpstream) sesForwardSimple(ctx context.Context, mail *upstream.Email) error {
-	input := &ses.SendEmailInput{
+	input := &awsses.SendEmailInput{
 		Source: aws.String(mail.From),
 		Destination: &types.Destination{
 			ToAddresses:  mail.To,
@@ -149,6 +148,21 @@ func (u *sesUpstream) sesForwardSimple(ctx context.Context, mail *upstream.Email
 	}
 
 	// Attempt to send the email.
-	_, err := u.ses.SendEmail(ctx, input)
+	_, err := u.client.SendEmail(ctx, input)
 	return err
 }
+
+type v2EndpointResolver struct {
+	Endpoint *url.URL
+	Headers  gohttp.Header
+}
+
+// ResolveEndpoint implements ses.EndpointResolverV2.
+func (r *v2EndpointResolver) ResolveEndpoint(ctx context.Context, params awsses.EndpointParameters) (endpoints.Endpoint, error) {
+	return endpoints.Endpoint{
+		URI:     *r.Endpoint,
+		Headers: r.Headers,
+	}, nil
+}
+
+var _ awsses.EndpointResolverV2 = (*v2EndpointResolver)(nil)
