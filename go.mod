@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.28.2
 	github.com/aws/smithy-go v1.22.0
 	github.com/creasty/defaults v1.8.0
-	github.com/docker/docker v27.3.1+incompatible
+	github.com/docker/docker v27.4.0+incompatible
 	github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
 	github.com/emersion/go-smtp v0.21.3
 	github.com/hashicorp/go-multierror v1.1.1
