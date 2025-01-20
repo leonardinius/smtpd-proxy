@@ -12,7 +12,6 @@ import (
 
 	"github.com/leonardinius/smtpd-proxy/app/cmd"
 	"github.com/stretchr/testify/require"
-	tc "github.com/testcontainers/testcontainers-go"
 )
 
 // BindHost host to bind to in local smoke tests.
@@ -128,12 +127,4 @@ func dynamicPort() int {
 	}
 
 	panic("Failed to get port")
-}
-
-// TerminateContainer terminates container if present.
-func TerminateContainer(ctx context.Context, container tc.Container) error {
-	if container != nil {
-		return container.Terminate(ctx)
-	}
-	return nil
 }

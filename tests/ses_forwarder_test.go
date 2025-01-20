@@ -63,8 +63,8 @@ func (su *SESSystemTestSuite) SetupSuite() {
 }
 
 func (su *SESSystemTestSuite) /*  */ TearDownSuite() {
-	err := TerminateContainer(su.ctx, su.localstack)
-	require.NoError(su.T(), err)
+	container := su.localstack
+	tc.CleanupContainer(su.T(), container)
 	su.localstack = nil
 }
 

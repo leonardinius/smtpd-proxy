@@ -24,7 +24,7 @@ func TestInitAddForward(t *testing.T) {
 }
 
 func TestRegistryRandomForwardPickRandomThresholds(t *testing.T) {
-	extractor := func(f Forwarder, e *registryEntry, err error) string {
+	extractor := func(_ Forwarder, e *registryEntry, err error) string {
 		if err != nil {
 			return err.Error()
 		}
