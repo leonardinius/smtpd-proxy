@@ -32,6 +32,17 @@
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "modifications",
     "cSpell.words": [
-        "datetime"
+        "awsconfig",
+        "awscreds",
+        "awsses",
+        "datetime",
+        "ehlo",
+        "Eventuallyf",
+        "gotest",
+        "localstack",
+        "smtpd",
+        "stretchr",
+        "systemtest",
+        "testcontainers"
     ]
 }
