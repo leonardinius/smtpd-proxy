@@ -165,7 +165,7 @@ smtpd-proxy:
 		bytes, err := io.ReadAll(sesFile)
 		require.NoError(t, err)
 		jsonMessage := string(bytes)
-		loremIpsumBase64 := base64.StdEncoding.EncodeToString([]byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")) // cspell:disable-line
+		loremIpsumBase64 := base64.StdEncoding.EncodeToString([]byte("Lorem ipsum dolor sit amet, consectetur...")) // cspell:disable-line
 		for strings.HasSuffix(loremIpsumBase64, "=") {
 			loremIpsumBase64 = strings.TrimSuffix(loremIpsumBase64, "=")
 		}
