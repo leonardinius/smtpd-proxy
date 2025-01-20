@@ -53,8 +53,8 @@ func (su *SMTPSystemTestSuite) SetupSuite() {
 }
 
 func (su *SMTPSystemTestSuite) TearDownSuite() {
-	err := TerminateContainer(su.ctx, su.smtpd)
-	require.NoError(su.T(), err)
+	container := su.smtpd
+	tc.CleanupContainer(su.T(), container)
 	su.smtpd = nil
 }
 
