@@ -63,8 +63,8 @@ func (su *SESSystemTestSuite) SetupSuite() {
 }
 
 func (su *SESSystemTestSuite) /*  */ TearDownSuite() {
-	container := su.localstack
-	tc.CleanupContainer(su.T(), container)
+	localstack := su.localstack
+	tc.CleanupContainer(su.T(), localstack)
 	su.localstack = nil
 }
 
