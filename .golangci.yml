@@ -15,9 +15,7 @@ linters:
     - gochecknoinits
     - goconst
     - err113
-    - gomnd
     - mnd
-    - execinquery
     - ireturn
     - nlreturn
     - nonamedreturns
