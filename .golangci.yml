@@ -1,32 +1,9 @@
+version: "2"
+
 run:
   timeout: 5m
 
-linters-settings:
-  gci:
-    prefix: github.com/leonardinius/go-service-template
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-  gocritic:
-    enabled-tags:
-      - performance
-      - style
-      - experimental
-  revive:
-    ignore-generated-header: true
-    severity: warning
-    enable-all-rules: false
-  sloglint:
-    no-mixed-args: true
-    kv-only: true
-    context: all
-    static-msg: true
-    # Enforce a single key naming convention. Values: snake, kebab, camel, pascal. Default: ""
-    key-naming-case: snake
+
 linters:
   disable:
     - containedctx
@@ -48,55 +25,66 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl
-      # dead packages
-    - deadcode
-    - exhaustivestruct
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
-    - nosnakecase
-    - scopelint
-    - structcheck
-    - varcheck
-  fast: false
-  enable-all: true
 
-issues:
-  exclude-dirs:
-    - vendor
-    - pkg/gen
-  exclude-rules:
-    - text: "at least one file in a package should have a package comment"
-      linters:
-        - stylecheck
-    - text: "should have a package comment"
-      linters:
-        - golint
-        - revive
-    - path: app/cmd/smtpd-proxy\.go
-      linters:
-        - lll
-    - path: _test\.go
-      linters:
-        - containedctx
-        - dupl
-        - errcheck
-        - forcetypeassert
-        - funlen
-        - gosec
-        - noctx
-        - paralleltest
-        - testifylint
-        - testpackage
-        - thelper
-        - wrapcheck
-    - path: e2e/.*\.go
-      linters:
-        - gosec
-        - dupl
-        - wrapcheck
-    - path: cmd/.*\.go
-      linters:
-        - gochecknoinits
-  exclude-use-default: false
+  settings:
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    misspell:
+      locale: US
+    lll:
+      line-length: 140
+    gocritic:
+      enabled-tags:
+        - performance
+        - style
+        - experimental
+    revive:
+      severity: warning
+      enable-all-rules: false
+    sloglint:
+      no-mixed-args: true
+      kv-only: true
+      context: all
+      static-msg: true
+      # Enforce a single key naming convention. Values: snake, kebab, camel, pascal. Default: ""
+      key-naming-case: snake    
+
+  exclusions:
+    paths:
+      - vendor
+      - pkg/gen
+
+    rules:
+      - text: "at least one file in a package should have a package comment"
+        linters:
+          - stylecheck
+      - text: "should have a package comment"
+        linters:
+          - golint
+          - revive
+      - path: app/cmd/smtpd-proxy\.go
+        linters:
+          - lll
+      - path: _test\.go
+        linters:
+          - containedctx
+          - dupl
+          - errcheck
+          - forcetypeassert
+          - funlen
+          - gosec
+          - noctx
+          - paralleltest
+          - testifylint
+          - testpackage
+          - thelper
+          - wrapcheck
+      - path: e2e/.*\.go
+        linters:
+          - gosec
+          - dupl
+          - wrapcheck
+      - path: cmd/.*\.go
+        linters:
+          - gochecknoinits
