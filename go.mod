@@ -10,8 +10,8 @@ require (
 	github.com/aws/smithy-go v1.22.2
 	github.com/creasty/defaults v1.8.0
 	github.com/docker/docker v28.1.1+incompatible
-	github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
-	github.com/emersion/go-smtp v0.21.3
+	github.com/emersion/go-sasl v0.0.0-20241020182733-b788ff22d5a6
+	github.com/emersion/go-smtp v0.23.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
